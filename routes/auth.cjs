@@ -110,6 +110,12 @@ const verifyToken = (req, res, next) => {
   const token = authHeader.split(" ")[1];
   jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret", (err, decoded) => {
     if (err) return res.status(403).json({ message: "Invalid token" });
+    // normalize numeric user_id to Number to avoid type-mismatch later
+    if (decoded && decoded.user_id !== undefined) {
+      try {
+        decoded.user_id = Number(decoded.user_id);
+      } catch (e) {}
+    }
     req.user = decoded;
     next();
   });
@@ -162,31 +168,52 @@ router.delete("/users/:id", verifyToken, async (req, res) => {
 });
 
 // ✅ อัปเดต status และ role เท่านั้น
-router.put("/users/:id", verifyToken, async (req, res) => {
+router.put("/users/:id", verifyToken, upload.single("image"), async (req, res) => {
   try {
-    if (req.user.role !== "1") {
-      return res.status(403).json({ message: "Admin only" });
+    const targetId = Number(req.params.id);
+    // allow admin or the owner themselves
+    if (req.user.role !== "1" && req.user.user_id !== targetId) {
+      return res.status(403).json({ message: "Forbidden: You can only update your own profile" });
     }
 
-    const { status, role } = req.body;
-
-    // validate ค่า
-    if (!["0", "1"].includes(String(status))) {
-      return res.status(400).json({ message: "Invalid status value" });
+    // If admin and status/role present -> update those
+    if (req.user.role === "1" && (req.body.status !== undefined || req.body.role !== undefined)) {
+      const { status, role } = req.body;
+      if (status !== undefined && !["0", "1"].includes(String(status))) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      if (role !== undefined && !["0", "1"].includes(String(role))) {
+        return res.status(400).json({ message: "Invalid role value" });
+      }
+      const user = await User.findOneAndUpdate(
+        { user_id: targetId },
+        { status, role },
+        { new: true }
+      ).select("-password");
+      if (!user) return res.status(404).json({ message: "User not found" });
+      return res.json({ message: "User updated (status & role)", user });
     }
-    if (!["0", "1"].includes(String(role))) {
-      return res.status(400).json({ message: "Invalid role value" });
+
+    // Otherwise allow profile update by owner (or admin updating profile fields)
+    const updateData = {};
+    const allowedFields = ["first_name", "last_name", "username", "tel", "email", "gender"];
+    allowedFields.forEach((f) => {
+      if (req.body[f] !== undefined) updateData[f] = req.body[f];
+    });
+
+    if (req.file && req.file.buffer) {
+      try {
+        const gridFilename = await uploadToGridFS(req.file);
+        updateData.image = gridFilename;
+      } catch (err) {
+        console.error('GridFS upload error (profile update):', err);
+        return res.status(500).json({ message: 'File upload failed' });
+      }
     }
 
-    const user = await User.findOneAndUpdate(
-      { user_id: Number(req.params.id) },
-      { status, role },
-      { new: true }
-    ).select("-password");
-
+    const user = await User.findOneAndUpdate({ user_id: targetId }, updateData, { new: true }).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.json({ message: "User updated (status & role)", user });
+    res.json({ message: "Profile updated", user });
   } catch (err) {
     console.error("Update user error:", err);
     res.status(500).json({ message: "Server error" });
