@@ -12,24 +12,33 @@ try {
   require('dotenv').config();
 } catch (e) {}
 
-// CORS: allow Vercel domain or FRONTEND_URL from env. If none set, allow all (dev).
+// CORS: allow FRONTEND_URL or allow Vercel/Render origins automatically.
 const allowedOrigins = [];
 if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
 if (process.env.VERCEL_URL) allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
 
-if (allowedOrigins.length === 0) {
-  app.use(cors());
-} else {
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        callback(new Error("Not allowed by CORS"));
-      },
-    })
-  );
-}
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow same-origin or no-origin (non-browser requests)
+      if (!origin) return callback(null, true);
+      // allow explicit whitelist
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // allow any Vercel deployments (your frontend) and Render domains
+      try {
+        const u = new URL(origin);
+        if (u.hostname.endsWith('.vercel.app') || u.hostname.endsWith('.onrender.com')) {
+          return callback(null, true);
+        }
+      } catch (e) {
+        // ignore
+      }
+      // otherwise reject with a friendly error (will not set CORS header)
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 

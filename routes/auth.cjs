@@ -23,7 +23,8 @@ const uploadToGridFS = (file) => {
         contentType: file.mimetype,
       });
       uploadStream.end(file.buffer);
-      uploadStream.on('finish', (uploadedFile) => resolve(uploadedFile.filename));
+      // 'finish' does not receive the file document; resolve with the filename we created
+      uploadStream.on('finish', () => resolve(filename));
       uploadStream.on('error', (err) => reject(err));
     } catch (err) {
       reject(err);
