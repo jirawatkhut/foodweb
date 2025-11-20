@@ -3,7 +3,6 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 import api from "../context/api.js";
-import Image from "../components/Image";
 
 const Recommend = () => {
   const { token, user_id } = useContext(AuthContext);
@@ -215,7 +214,11 @@ const Recommend = () => {
                   >
           <figure>
             {r.image ? (
-              <Image image={r.image} alt={r.title} className="w-full h-56 object-cover" />
+              <img
+                src={`/uploads/${r.image}`}
+                alt={r.title}
+                className="w-full h-56 object-cover"
+              />
             ) : (
               <div className="w-full h-56 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
                 ไม่มีรูปภาพ

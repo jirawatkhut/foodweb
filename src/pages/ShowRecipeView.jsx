@@ -3,7 +3,6 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import api from "../context/api.js";
-import Image from "../components/Image";
 const ShowRecipeView = () => {
   const { token, user_id } = useContext(AuthContext);
   const [recipes, setRecipes] = useState([]);
@@ -183,7 +182,11 @@ const ShowRecipeView = () => {
                   className="cursor-pointer"
                 >
                   {r.image ? (
-                    <Image image={r.image} alt={r.title} className="w-full h-48 object-cover" />
+                    <img
+                      src={`/uploads/${r.image}`}
+                      alt={r.title}
+                      className="w-full h-48 object-cover"
+                    />
                   ) : (
                     <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
                       ไม่มีรูป

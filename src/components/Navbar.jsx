@@ -1,7 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useContext, useState, useRef, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
-import Image from "../components/Image";
 
 const Navbar = () => {
   const { token, role, username, image, logout  } = useContext(AuthContext); 
@@ -116,10 +115,19 @@ const Navbar = () => {
               className="flex items-center cursor-pointer"
               onClick={() => setOpenMenu(!openMenu)}
             >
-              <Image
-                image={image || "/uploads/Placeholder.png"}
+              <img
+                 src={
+                 image
+                   ? `/uploads/${image}`
+                   : `/uploads/Placeholder.png`
+                }
                 alt="profile"
-                style={{ width: 45, height: 45, borderRadius: "50%", marginRight: 8 }}
+                style={{
+                  width: 45,
+                  height: 45,
+                  borderRadius: "50%",
+                  marginRight: 8,
+                }}
               />
               <h2 className="font-bold">{username || "User"}</h2>
             </div>
