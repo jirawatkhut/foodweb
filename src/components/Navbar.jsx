@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useContext, useState, useRef, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { getImageUrl } from "../context/api.js";
 
 const Navbar = () => {
   const { token, role, username, image, logout  } = useContext(AuthContext); 
@@ -116,11 +117,7 @@ const Navbar = () => {
               onClick={() => setOpenMenu(!openMenu)}
             >
               <img
-                 src={
-                 image
-                   ? `/uploads/${image}`
-                   : `/uploads/Placeholder.png`
-                }
+                 src={image ? getImageUrl(image) : getImageUrl('Placeholder.png')}
                 alt="profile"
                 style={{
                   width: 45,

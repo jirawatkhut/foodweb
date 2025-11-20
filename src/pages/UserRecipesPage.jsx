@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 import api from "../context/api.js";
+import { getImageUrl } from "../context/api.js";
 const UserRecipesPage = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -85,7 +86,7 @@ const UserRecipesPage = () => {
               <figure>
                 {r.image ? (
                   <img
-                    src={`/uploads/${r.image}`}
+                    src={getImageUrl(r.image)}
                     alt={r.title}
                     className="w-full h-56 object-cover"
                   />

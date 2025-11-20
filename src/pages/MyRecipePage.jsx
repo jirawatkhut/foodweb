@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
+import { getImageUrl } from "../context/api.js";
 import { set } from "mongoose";
 
 const MyRecipePage = () => {
@@ -560,7 +561,7 @@ const MyRecipePage = () => {
               <div className="relative">
                 {r.image ? (
                   <img
-                    src={`/uploads/${r.image}`}
+                    src={getImageUrl(r.image)}
                     alt={r.title}
                     className="w-full h-48 object-cover"
                   />
