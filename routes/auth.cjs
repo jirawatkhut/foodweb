@@ -4,11 +4,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
-const mongoose = require("mongoose");
 const User = require("../models/User.cjs");
 const Recipe = require("../models/Recipe.cjs");
-const { upload, uploadToGridFS } = require("../middleware/gridfsMiddleware.cjs");
-const { getGridFSBucket, deleteFile } = require("../utils/gridfsConfig.cjs");
 
 
 // กำหนด storage สำหรับอัปโหลด
@@ -20,18 +17,12 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + path.extname(file.originalname)); // ชื่อไฟล์ไม่ซ้ำ
   },
 });
-
+const upload = multer({ storage });
 
 // ✅ REGISTER
-router.post("/register", upload.single("profileImage"), uploadToGridFS, async (req, res) => {
+router.post("/register", upload.single("image"), async (req, res) => {
   try {
     const { first_name, last_name, username, password, tel, email, gender, role } = req.body;
-
-    // ตรวจสอบ username ซ้ำ
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ message: "ชื่อผู้ใช้นี้มีผู้ใช้แล้ว" });
-    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -43,15 +34,15 @@ router.post("/register", upload.single("profileImage"), uploadToGridFS, async (r
       tel,
       email,
       gender,
-      role: role || "0",
-      profileImage: req.fileId || null, // เก็บ GridFS file ID
+      role,
+      image: req.file ? req.file.filename : null, // เก็บชื่อไฟล์รูป
     });
 
     await newUser.save();
     res.status(201).json({ message: "Register success" });
   } catch (err) {
     console.error("Register error:", err);
-    res.status(500).json({ message: "Register failed: " + err.message });
+    res.status(500).json({ message: "Register failed" });
   }
 });
 
@@ -288,174 +279,6 @@ router.put("/users/:id/favorites", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Favorite update error:", err);
     res.status(500).json({ message: "Server error" });
-  }
-});
-
-// 📌 GridFS Endpoints สำหรับรูปโปรไฟล์
-
-// ✅ อัพโหลดรูปโปรไฟล์ไป GridFS
-router.post("/users/:id/profile-image", verifyToken, upload.single("profileImage"), uploadToGridFS, async (req, res) => {
-  try {
-    // ตรวจสอบ error จากการ upload
-    if (req.uploadError) {
-      return res.status(400).json({ message: "ไม่สามารถอัพโหลดไฟล์ได้: " + req.uploadError.message });
-    }
-
-    // ตรวจสอบว่ามีไฟล์
-    if (!req.fileId) {
-      return res.status(400).json({ message: "ไม่มีไฟล์ที่ส่งมา" });
-    }
-
-    // ตรวจสอบสิทธิ์
-    if (req.user.role !== "1" && req.user.user_id !== parseInt(req.params.id)) {
-      return res.status(403).json({ message: "Forbidden: You can only upload your own profile image" });
-    }
-
-    const user = await User.findOne({ user_id: req.params.id });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    // ลบรูปเก่าถ้ามี
-    if (user.profileImage) {
-      try {
-        await deleteFile(user.profileImage);
-        console.log(`🗑️ Deleted old profile image: ${user.profileImage}`);
-      } catch (err) {
-        console.error("Error deleting old profile image:", err);
-      }
-    }
-
-    // อัปเดต profileImage field ด้วย file ID จาก GridFS
-    user.profileImage = req.fileId;
-    await user.save();
-
-    res.json({ 
-      message: "อัพโหลดรูปโปรไฟล์สำเร็จ", 
-      profileImageId: req.fileId,
-      fileName: req.fileName,
-    });
-  } catch (err) {
-    console.error("Upload profile image error:", err);
-    res.status(500).json({ message: "Server error: " + err.message });
-  }
-});
-
-// ✅ ดึงรูปโปรไฟล์จาก GridFS
-router.get("/users/:id/profile-image", async (req, res) => {
-  try {
-    const user = await User.findOne({ user_id: req.params.id });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (!user.profileImage) {
-      return res.status(404).json({ message: "No profile image found" });
-    }
-
-    const bucket = getGridFSBucket();
-    const downloadStream = bucket.openDownloadStream(
-      new mongoose.Types.ObjectId(user.profileImage)
-    );
-
-    // ตั้ง content type
-    res.setHeader("Content-Type", "image/jpeg");
-    res.setHeader("Cache-Control", "public, max-age=3600"); // Cache 1 ชั่วโมง
-
-    downloadStream.on("error", (err) => {
-      console.error("GridFS download error:", err);
-      if (!res.headersSent) {
-        res.status(404).json({ message: "Image not found" });
-      }
-    });
-
-    // Stream รูปตรงไปให้ client
-    downloadStream.pipe(res);
-  } catch (err) {
-    console.error("Get profile image error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// ✅ ลบรูปโปรไฟล์จาก GridFS
-router.delete("/users/:id/profile-image", verifyToken, async (req, res) => {
-  try {
-    // ตรวจสอบสิทธิ์
-    if (req.user.role !== "1" && req.user.user_id !== parseInt(req.params.id)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
-    const user = await User.findOne({ user_id: req.params.id });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (!user.profileImage) {
-      return res.status(404).json({ message: "No profile image to delete" });
-    }
-
-    // ลบไฟล์จาก GridFS
-    await deleteFile(user.profileImage);
-
-    // ลบ profileImage field จาก database
-    user.profileImage = null;
-    await user.save();
-
-    res.json({ message: "ลบรูปโปรไฟล์สำเร็จ" });
-  } catch (err) {
-    console.error("Delete profile image error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// 📌 อัปเดตข้อมูลผู้ใช้ (ชื่อ, อีเมล, เบอร์โทร) พร้อมรูปโปรไฟล์
-router.put("/users/:id/profile", verifyToken, upload.single("profileImage"), uploadToGridFS, async (req, res) => {
-  try {
-    // ตรวจสอบสิทธิ์
-    if (req.user.role !== "1" && req.user.user_id !== parseInt(req.params.id)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
-    const { first_name, last_name, email, tel } = req.body;
-    const user = await User.findOne({ user_id: req.params.id });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    // อัปเดตข้อมูลส่วนตัว
-    if (first_name) user.first_name = first_name;
-    if (last_name) user.last_name = last_name;
-    if (email) user.email = email;
-    if (tel) user.tel = tel;
-
-    // ถ้ามีการอัพโหลดรูปใหม่
-    if (req.fileId) {
-      // ตรวจสอบ error จากการ upload
-      if (req.uploadError) {
-        return res.status(400).json({ message: "ไม่สามารถอัพโหลดไฟล์ได้: " + req.uploadError.message });
-      }
-
-      // ลบรูปเก่าถ้ามี
-      if (user.profileImage) {
-        try {
-          await deleteFile(user.profileImage);
-          console.log(`🗑️ Deleted old profile image: ${user.profileImage}`);
-        } catch (err) {
-          console.error("Error deleting old profile image:", err);
-        }
-      }
-      user.profileImage = req.fileId;
-    }
-
-    await user.save();
-
-    res.json({ 
-      message: "อัปเดตข้อมูลโปรไฟล์สำเร็จ", 
-      user: {
-        user_id: user.user_id,
-        username: user.username,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: user.email,
-        tel: user.tel,
-        profileImageId: user.profileImage,
-      },
-    });
-  } catch (err) {
-    console.error("Update profile error:", err);
-    res.status(500).json({ message: "Server error: " + err.message });
   }
 });
 

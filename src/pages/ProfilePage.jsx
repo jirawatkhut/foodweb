@@ -77,8 +77,7 @@ const ProfilePage = () => {
       tel: profile.tel || "",
       image: null,
     });
-    // ใช้ GridFS endpoint สำหรับรูปโปรไฟล์
-    setPreview(profile.profileImage ? `/api/auth/users/${user_id}/profile-image` : null);
+    setPreview(profile.image ? `/uploads/${profile.image}` : null);
     setShowEdit(true);
   };
 
@@ -95,18 +94,9 @@ const ProfilePage = () => {
     e.preventDefault();
     try {
       const formData = new FormData();
-      formData.append("first_name", form.first_name);
-      formData.append("last_name", form.last_name);
-      formData.append("email", form.email);
-      formData.append("tel", form.tel);
-      
-      // เพิ่มรูปโปรไฟล์ถ้ามี
-      if (form.image) {
-        formData.append("profileImage", form.image);
-      }
-
+      Object.keys(form).forEach((k) => form[k] && formData.append(k, form[k]));
       await api.put(
-        `/api/auth/users/${user_id}/profile`,
+        `/api/auth/users/${user_id}`,
         formData,
         {
           headers: {
@@ -215,9 +205,9 @@ const ProfilePage = () => {
     <div className="text-black flex flex-col items-center py-10 gap-8">
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
         <div className="flex items-center gap-6 mb-6">
-          {profile.profileImage ? (
+          {profile.image ? (
             <img
-              src={`/api/auth/users/${user_id}/profile-image`}
+              src={`/uploads/${profile.image}`}
               alt="profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-indigo-200"
             />
