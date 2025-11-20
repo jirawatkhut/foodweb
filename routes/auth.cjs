@@ -23,9 +23,15 @@ const storage = multer.diskStorage({
 
 
 // ✅ REGISTER
-router.post("/register", upload.single("image"), async (req, res) => {
+router.post("/register", upload.single("profileImage"), uploadToGridFS, async (req, res) => {
   try {
     const { first_name, last_name, username, password, tel, email, gender, role } = req.body;
+
+    // ตรวจสอบ username ซ้ำ
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "ชื่อผู้ใช้นี้มีผู้ใช้แล้ว" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -37,15 +43,15 @@ router.post("/register", upload.single("image"), async (req, res) => {
       tel,
       email,
       gender,
-      role,
-      image: req.file ? req.file.filename : null, // เก็บชื่อไฟล์รูป
+      role: role || "0",
+      profileImage: req.fileId || null, // เก็บ GridFS file ID
     });
 
     await newUser.save();
     res.status(201).json({ message: "Register success" });
   } catch (err) {
     console.error("Register error:", err);
-    res.status(500).json({ message: "Register failed" });
+    res.status(500).json({ message: "Register failed: " + err.message });
   }
 });
 
