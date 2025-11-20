@@ -1,7 +1,8 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+
+import api from "../context/api.js";
 
 const Recommend = () => {
   const { token, user_id } = useContext(AuthContext);
@@ -27,7 +28,7 @@ const Recommend = () => {
 
   const fetchRecipes = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/recipes", {
+      const res = await api.get("/api/recipes", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = res.data.filter((r) => r.staring_status);
@@ -39,7 +40,7 @@ const Recommend = () => {
 
   const fetchTags = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/tag", {
+      const res = await api.get("/api/tag", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setTags(res.data.filter((t) => t.status !== "Inactive"));
@@ -50,7 +51,7 @@ const Recommend = () => {
 
   const fetchFavorites = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/auth/users/${user_id}`, {
+      const res = await api.get(`/api/auth/users/${user_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setFavorites(res.data.favorites || []);
@@ -62,7 +63,7 @@ const Recommend = () => {
   const fetchInterestedTags = async () => {
     if (!token || !user_id) return;
     try {
-      const res = await axios.get(`http://localhost:3000/api/auth/users/${user_id}`, {
+      const res = await api.get(`/api/auth/users/${user_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setInterestedTags(res.data.interested_tags || []);
@@ -99,8 +100,8 @@ const Recommend = () => {
   const handleSaveTags = async () => {
     if (!token || !user_id) return alert("กรุณาเข้าสู่ระบบ");
     try {
-      await axios.put(
-        `http://localhost:3000/api/auth/users/${user_id}/tags`,
+      await api.put(
+        `/api/auth/users/${user_id}/tags`,
         { interested_tags: selectedTags },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -108,6 +109,7 @@ const Recommend = () => {
       fetchInterestedTags(); // Re-fetch to sync state and recommendations
       setTagDropdownOpen(false); // Close dropdown on save
     } catch (err) {
+      console.error("Recommend handleSaveTags error:", err.message);
       alert("ไม่สามารถบันทึก Tag ได้");
     }
   };

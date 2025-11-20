@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
+
+import api from "../context/api.js";
 import { set } from "mongoose";
 
 const MyRecipePage = () => {
@@ -38,7 +39,7 @@ const MyRecipePage = () => {
   const fetchAllData = async () => {
     try {
       // 1. Fetch all public recipes to calculate tag popularity
-      const allRecipesRes = await axios.get("http://localhost:3000/api/recipes", {
+      const allRecipesRes = await api.get("/api/recipes", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const publicRecipes = allRecipesRes.data.filter(r => r.staring_status);
@@ -60,7 +61,7 @@ const MyRecipePage = () => {
 
   const fetchRecipes = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/recipes", {
+      const res = await api.get("/api/recipes", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRecipes(res.data.filter((r) => r.created_by === user_id));
@@ -76,7 +77,7 @@ const MyRecipePage = () => {
 
   const fetchTags = async (allRecipes) => {
     try {
-      const res = await axios.get("http://localhost:3000/api/tag", {
+      const res = await api.get("/api/tag", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const fetchedTags = res.data;
@@ -202,14 +203,14 @@ const MyRecipePage = () => {
       }
 
       if (editId) {
-        await axios.put(`http://localhost:3000/api/recipes/${editId}`, data, {
+        await api.put(`/api/recipes/${editId}`, data, {
           headers: {
             Authorization: `Bearer ${token}`,
             // Let axios set Content-Type with proper boundary for multipart
           },
         });
       } else {
-        await axios.post("http://localhost:3000/api/recipes", data, {
+        await api.post("/api/recipes", data, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -274,7 +275,7 @@ const MyRecipePage = () => {
   const handleDelete = async (id) => {
     if (window.confirm("ลบสูตรนี้จริงหรือไม่?")) {
       try {
-        await axios.delete(`http://localhost:3000/api/recipes/${id}`, {
+        await api.delete(`/api/recipes/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         fetchRecipes();

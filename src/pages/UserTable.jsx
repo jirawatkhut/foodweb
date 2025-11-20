@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
 
+import { AuthContext } from "../context/AuthContext";
+import api from "../context/api.js";
 
 const UserTable = () => {
   const { token, role } = useContext(AuthContext);
@@ -21,7 +21,7 @@ const UserTable = () => {
   const fetchUsers = async () => {
     setStatus("loading");
     try {
-      const res = await axios.get("http://localhost:3000/api/auth/users", {
+      const res = await api.get("/api/auth/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data);
@@ -42,8 +42,8 @@ const UserTable = () => {
 
     try {
       // Call backend to mark user status = "0" (inactive) using user_id
-      await axios.put(
-        `http://localhost:3000/api/auth/users/${user.user_id}/status`,
+      await api.put(
+        `/api/auth/users/${user.user_id}/status`,
         { status: "0" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -67,8 +67,8 @@ const UserTable = () => {
 
   const handleSave = async () => {
   try {
-    await axios.put(
-      `http://localhost:3000/api/auth/users/${editingUser}`,
+    await api.put(
+      `/api/auth/users/${editingUser}`,
       {
         status: form.status,
         role: form.role,

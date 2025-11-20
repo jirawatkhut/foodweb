@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
-
+import api from "../context/api.js";
 const CommentSection = ({ recipeId }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
@@ -10,7 +10,7 @@ const CommentSection = ({ recipeId }) => {
     // Fetch comments
     const fetchComments = async () => {
         try {
-            const response = await axios.get(`http://localhost:3000/api/comments/${recipeId}`);
+            const response = await api.get(`/api/comments/${recipeId}`);
             setComments(response.data);
         } catch (error) {
             console.error('Error fetching comments:', error);
@@ -27,8 +27,8 @@ const CommentSection = ({ recipeId }) => {
         if (!newComment.trim()) return;
 
         try {
-            await axios.post(
-                `http://localhost:3000/api/comments/${recipeId}`,
+            await api.post(
+                `/api/comments/${recipeId}`,
                 { content: newComment },
                 {
                     headers: {
@@ -47,7 +47,7 @@ const CommentSection = ({ recipeId }) => {
     const handleDeleteComment = async (commentId) => {
         try {
             await axios.delete(
-                `http://localhost:3000/api/comments/${commentId}`,
+                `/api/comments/${commentId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`

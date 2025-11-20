@@ -17,7 +17,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Users, FileText, Tag, AlertCircle } from "lucide-react";
-
+import api from "../context/api.js";
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 const StatCard = ({ title, value, subtitle, icon, iconBg = "bg-gray-200 text-gray-700" }) => (
@@ -60,23 +60,23 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       // Users (admin endpoint)
-      const usersRes = await axios.get("http://localhost:3000/api/auth/users", {
+      const usersRes = await api.get("/api/auth/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const users = usersRes.data || [];
 
       // Recipes
-      const recipesRes = await axios.get("http://localhost:3000/api/recipes");
+      const recipesRes = await api.get("/api/recipes");
       const recipes = recipesRes.data || [];
 
       // Tags (admin - all tags)
-      const tagsRes = await axios.get("http://localhost:3000/api/tag/all", {
+      const tagsRes = await api.get("/api/tag/all", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const tags = tagsRes.data || [];
 
       // Reports
-      const reportsRes = await axios.get("http://localhost:3000/api/reports", {
+      const reportsRes = await api.get("/api/reports", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const reports = reportsRes.data || [];

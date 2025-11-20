@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+
+import api from "../context/api.js";
 
 const RecipeTable = () => {
   const { token, role } = useContext(AuthContext);
@@ -40,7 +41,7 @@ const RecipeTable = () => {
   const fetchRecipes = async () => {
     setStatus("loading");
     try {
-      const res = await axios.get("http://localhost:3000/api/recipes", {
+      const res = await api.get("/api/recipes", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRecipes(res.data);
@@ -52,7 +53,7 @@ const RecipeTable = () => {
 
   const fetchTags = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/tag", {
+      const res = await api.get("/api/tag", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTags(res.data);
@@ -140,14 +141,14 @@ const RecipeTable = () => {
       if (image) data.append("image", image);
 
       if (editId) {
-        await axios.put(`http://localhost:3000/api/recipes/${editId}`, data, {
+        await api.put(`/api/recipes/${editId}`, data, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         });
       } else {
-        await axios.post("http://localhost:3000/api/recipes", data, {
+        await api.post("/api/recipes", data, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
@@ -200,7 +201,7 @@ const RecipeTable = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("ลบสูตรนี้จริงหรือไม่?")) {
-      await axios.delete(`http://localhost:3000/api/recipes/${id}`, {
+      await api.delete(`/api/recipes/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchRecipes();

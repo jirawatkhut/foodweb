@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 
+import api from "../context/api.js";
 const UserRecipesPage = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const UserRecipesPage = () => {
       setLoading(true);
       try {
         // Fetch all recipes (public endpoint)
-        const recipesRes = await axios.get("http://localhost:3000/api/recipes");
+        const recipesRes = await api.get("/api/recipes");
 
         // Filter recipes by the user and public (staring_status) flag
         // Note: created_by in backend is numeric; ensure numeric comparison

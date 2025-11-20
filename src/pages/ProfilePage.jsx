@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+
+import api from "../context/api.js";
 import { AuthContext } from "../context/AuthContext";
 
 const ProfilePage = () => {
@@ -36,13 +37,13 @@ const ProfilePage = () => {
         if (!user_id) return;
 
         const [profileRes, tagRes, recipesRes] = await Promise.all([
-          axios.get(`http://localhost:3000/api/auth/users/${user_id}`, {
+          api.get(`/api/auth/users/${user_id}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:3000/api/tag", {
+          api.get("/api/tag", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:3000/api/recipes"),
+          api.get("/api/recipes"),
         ]);
 
         setProfile(profileRes.data);
@@ -94,8 +95,8 @@ const ProfilePage = () => {
     try {
       const formData = new FormData();
       Object.keys(form).forEach((k) => form[k] && formData.append(k, form[k]));
-      await axios.put(
-        `http://localhost:3000/api/auth/users/${user_id}`,
+      await api.put(
+        `/api/auth/users/${user_id}`,
         formData,
         {
           headers: {
@@ -119,8 +120,8 @@ const ProfilePage = () => {
       return alert("รหัสผ่านใหม่ไม่ตรงกัน");
 
     try {
-      await axios.put(
-        `http://localhost:3000/api/auth/users/${user_id}/password`,
+      await api.put(
+        `/api/auth/users/${user_id}/password`,
         resetForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -147,8 +148,8 @@ const ProfilePage = () => {
 
   const handleSaveTags = async () => {
     try {
-      await axios.put(
-        `http://localhost:3000/api/auth/users/${user_id}/tags`,
+      await api.put(
+        `/api/auth/users/${user_id}/tags`,
         { interested_tags: selectedTags.map((t) => t.tag_id) },
         { headers: { Authorization: `Bearer ${token}` } }
       );

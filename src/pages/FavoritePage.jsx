@@ -1,8 +1,8 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
+import api from "../context/api.js";
 const FavoritePage = () => {
   const { token, user_id } = useContext(AuthContext);
   const [recipes, setRecipes] = useState([]);
@@ -21,7 +21,7 @@ const FavoritePage = () => {
   // ✅ ดึงข้อมูล favorite ของ user
   const fetchFavorites = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/auth/users/${user_id}`, {
+      const res = await api.get(`/api/auth/users/${user_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setFavorites(res.data.favorites || []);
@@ -33,7 +33,7 @@ const FavoritePage = () => {
   // ✅ ดึงสูตรอาหารทั้งหมด (เฉพาะ Public)
   const fetchRecipes = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/recipes", {
+      const res = await api.get("/api/recipes", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setRecipes(res.data.filter((r) => r.staring_status));
@@ -45,7 +45,7 @@ const FavoritePage = () => {
   // ✅ ดึง Tag
   const fetchTags = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/tag", {
+      const res = await api.get("/api/tag", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setTags(res.data.filter((t) => t.status !== "Inactive"));
@@ -57,8 +57,8 @@ const FavoritePage = () => {
   // ✅ toggle favorite (เพิ่ม/เอาออก)
   const toggleFavorite = async (recipe_id) => {
     try {
-      await axios.put(
-        `http://localhost:3000/api/auth/users/${user_id}/favorites`,
+      await api.put(
+        `/api/auth/users/${user_id}/favorites`,
         { recipe_id },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
 
+import { AuthContext } from "../context/AuthContext";
+import api from "../context/api.js";
 const TagTable = () => {
   const { token, role } = useContext(AuthContext);
   const [tags, setTags] = useState([]);
@@ -30,7 +30,7 @@ const TagTable = () => {
   const fetchTags = async () => {
     setStatus("loading");
     try {
-      const res = await axios.get("http://localhost:3000/api/tag/all", {
+      const res = await api.get("/api/tag/all", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTags(res.data);
@@ -43,7 +43,7 @@ const TagTable = () => {
   const handleDelete = async (id) => {
     if (window.confirm("คุณต้องการลบ Tag นี้หรือไม่?")) {
       try {
-        await axios.delete(`http://localhost:3000/api/tag/${id}`, {
+        await api.delete(`/api/tag/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         fetchTags();
@@ -71,11 +71,11 @@ const TagTable = () => {
   const handleSave = async () => {
     try {
       if (editingTag === "new") {
-        await axios.post("http://localhost:3000/api/tag", form, {
+        await api.post("/api/tag", form, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
-        await axios.put(`http://localhost:3000/api/tag/${editingTag}`, form, {
+        await api.put(`/api/tag/${editingTag}`, form, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }

@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
 
+import { AuthContext } from "../context/AuthContext";
+import api from "../context/api.js";
 const Report = () => {
   const { token, role, user_id } = useContext(AuthContext);
   const [reports, setReports] = useState([]);
@@ -31,7 +31,7 @@ const Report = () => {
   const fetchReports = async () => {
     setStatus("loading");
     try {
-      const res = await axios.get("http://localhost:3000/api/reports", {
+      const res = await api.get("/api/reports", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReports(res.data.filter((r) => r.created_by === user_id));
@@ -58,11 +58,11 @@ const Report = () => {
           alert("กรุณาระบุหัวข้อรายงาน (Report name)");
           return;
         }
-        await axios.post("http://localhost:3000/api/reports", form, {
+        await api.post("/api/reports", form, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
-        await axios.put(`http://localhost:3000/api/reports/${editingReport}`, form, {
+        await api.put(`/api/reports/${editingReport}`, form, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }

@@ -1,8 +1,8 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
+import api from "../context/api.js";
 const Login = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const Login = () => {
     // clear previous messages
     setStatusMessage({ type: "", text: "" });
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/login", form);
+      const res = await api.post("/api/auth/login", form);
 
       // backend ส่งกลับ: { token, role, username, image }
       const { token, role, username, image ,user_id } = res.data;

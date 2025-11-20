@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
+
+import api from "../context/api.js";
 
 const Star = ({ filled, onClick }) => (
   <svg
@@ -74,7 +75,7 @@ const RecipeDetailPage = () => {
 
   const fetchRecipe = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/recipes/${id}`, {
+      const res = await api.get(`/api/recipes/${id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setRecipe(res.data);
@@ -86,7 +87,7 @@ const RecipeDetailPage = () => {
 
   const fetchTags = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/tag",{
+      const res = await api.get("/api/tag",{
         headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
       setTags(res.data);
@@ -98,7 +99,7 @@ const RecipeDetailPage = () => {
   // ดึงคะแนนทั้งหมด
 const fetchRatings = async () => {
   try {
-    const res = await axios.get(`http://localhost:3000/api/recipes/${id}/ratings`);
+    const res = await api.get(`/api/recipes/${id}/ratings`);
     setRatings(res.data.ratings);
     setAverage(res.data.average);
     console.log("Fetched ratings:", res.data);
@@ -110,7 +111,7 @@ const fetchRatings = async () => {
 // ✅ ดึง favorite ของ user
 const fetchFavorites = async () => {
   try {
-    const res = await axios.get(`http://localhost:3000/api/auth/users/${user_id}`, {
+    const res = await api.get(`/api/auth/users/${user_id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     setFavorites(res.data.favorites || []);
@@ -127,8 +128,8 @@ const toggleFavorite = async (recipe_id) => {
     return;
   }
   try {
-    await axios.put(
-      `http://localhost:3000/api/auth/users/${user_id}/favorites`,
+    await api.put(
+      `/api/auth/users/${user_id}/favorites`,
       { recipe_id },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -145,16 +146,16 @@ const submitRating = async () => {
   try {
     if (editingRating) {
       // โหมดแก้ไข
-      await axios.put(
-        `http://localhost:3000/api/recipes/${id}/rate`,
+      await api.put(
+        `/api/recipes/${id}/rate`,
         { score, comment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setEditingRating(null); // ออกจากโหมดแก้ไข
     } else {
       // โหมดสร้างใหม่
-      await axios.post(
-        `http://localhost:3000/api/recipes/${id}/rate`,
+      await api.post(
+        `/api/recipes/${id}/rate`,
         { score, comment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -191,8 +192,8 @@ const deleteRating = async (ratingId) => {
     // Optimistic removal: remove from UI immediately
     setRatings((prev) => prev.filter((r) => String(r._id) !== String(ratingId)));
 
-    await axios.delete(
-      `http://localhost:3000/api/recipes/${id}/rate/${ratingId}`,
+    await api.delete(
+      `/api/recipes/${id}/rate/${ratingId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
