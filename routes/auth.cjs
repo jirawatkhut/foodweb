@@ -4,8 +4,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
+const mongoose = require("mongoose");
 const User = require("../models/User.cjs");
 const Recipe = require("../models/Recipe.cjs");
+const { upload, uploadToGridFS } = require("../middleware/gridfsMiddleware.cjs");
+const { getGridFSBucket, deleteFile } = require("../utils/gridfsConfig.cjs");
 
 
 // กำหนด storage สำหรับอัปโหลด
@@ -278,6 +281,144 @@ router.put("/users/:id/favorites", verifyToken, async (req, res) => {
     res.json({ message: "อัปเดต favorite สำเร็จ", favorites: user.favorites });
   } catch (err) {
     console.error("Favorite update error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 📌 GridFS Endpoints สำหรับรูปโปรไฟล์
+
+// ✅ อัพโหลดรูปโปรไฟล์ไป GridFS
+router.post("/users/:id/profile-image", verifyToken, upload.single("profileImage"), uploadToGridFS, async (req, res) => {
+  try {
+    // ตรวจสอบสิทธิ์
+    if (req.user.role !== "1" && req.user.user_id !== parseInt(req.params.id)) {
+      return res.status(403).json({ message: "Forbidden: You can only upload your own profile image" });
+    }
+
+    const user = await User.findOne({ user_id: req.params.id });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // ลบรูปเก่าถ้ามี
+    if (user.profileImage) {
+      try {
+        await deleteFile(user.profileImage);
+      } catch (err) {
+        console.error("Error deleting old profile image:", err);
+      }
+    }
+
+    // อัปเดต profileImage field ด้วย file ID จาก GridFS
+    user.profileImage = req.fileId;
+    await user.save();
+
+    res.json({ 
+      message: "อัพโหลดรูปโปรไฟล์สำเร็จ", 
+      profileImageId: req.fileId 
+    });
+  } catch (err) {
+    console.error("Upload profile image error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ✅ ดึงรูปโปรไฟล์จาก GridFS
+router.get("/users/:id/profile-image", async (req, res) => {
+  try {
+    const user = await User.findOne({ user_id: req.params.id });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.profileImage) {
+      return res.status(404).json({ message: "No profile image found" });
+    }
+
+    const bucket = getGridFSBucket();
+    const downloadStream = bucket.openDownloadStream(
+      new mongoose.Types.ObjectId(user.profileImage)
+    );
+
+    // ตั้ง content type
+    res.setHeader("Content-Type", "image/jpeg");
+
+    downloadStream.on("error", (err) => {
+      console.error("GridFS download error:", err);
+      res.status(404).json({ message: "Image not found" });
+    });
+
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.error("Get profile image error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ✅ ลบรูปโปรไฟล์จาก GridFS
+router.delete("/users/:id/profile-image", verifyToken, async (req, res) => {
+  try {
+    // ตรวจสอบสิทธิ์
+    if (req.user.role !== "1" && req.user.user_id !== parseInt(req.params.id)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const user = await User.findOne({ user_id: req.params.id });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.profileImage) {
+      return res.status(404).json({ message: "No profile image to delete" });
+    }
+
+    // ลบไฟล์จาก GridFS
+    await deleteFile(user.profileImage);
+
+    // ลบ profileImage field จาก database
+    user.profileImage = null;
+    await user.save();
+
+    res.json({ message: "ลบรูปโปรไฟล์สำเร็จ" });
+  } catch (err) {
+    console.error("Delete profile image error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 📌 อัปเดตข้อมูลผู้ใช้ (ชื่อ, อีเมล, เบอร์โทร) พร้อมรูปโปรไฟล์
+router.put("/users/:id/profile", verifyToken, upload.single("profileImage"), uploadToGridFS, async (req, res) => {
+  try {
+    // ตรวจสอบสิทธิ์
+    if (req.user.role !== "1" && req.user.user_id !== parseInt(req.params.id)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const { first_name, last_name, email, tel } = req.body;
+    const user = await User.findOne({ user_id: req.params.id });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // อัปเดตข้อมูลส่วนตัว
+    if (first_name) user.first_name = first_name;
+    if (last_name) user.last_name = last_name;
+    if (email) user.email = email;
+    if (tel) user.tel = tel;
+
+    // ถ้ามีการอัพโหลดรูปใหม่
+    if (req.fileId) {
+      // ลบรูปเก่าถ้ามี
+      if (user.profileImage) {
+        try {
+          await deleteFile(user.profileImage);
+        } catch (err) {
+          console.error("Error deleting old profile image:", err);
+        }
+      }
+      user.profileImage = req.fileId;
+    }
+
+    await user.save();
+
+    res.json({ 
+      message: "อัปเดตข้อมูลโปรไฟล์สำเร็จ", 
+      user: user 
+    });
+  } catch (err) {
+    console.error("Update profile error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
-
+const { initGridFS } = require("./utils/gridfsConfig.cjs");
 
 const app = express();
 const PORT = 3000;
@@ -35,6 +35,10 @@ app.use("/api/comments", commentsRoute);
 
 mongoose.connection.once("open", async () => {
   console.log("MongoDB connected");
+  
+  // เตรียม GridFS
+  await initGridFS();
+  console.log("GridFS initialized");
 
 
   // ✅ เพิ่มข้อมูลตัวอย่าง 3รายการ (ถ้าต้องการ)

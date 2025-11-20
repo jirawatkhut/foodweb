@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
   gender: String,
   role: { type: String, default: "0" }, // 0 = member, 1 = admin
   image: String,
+  profileImage: mongoose.Schema.Types.ObjectId, // GridFS file ID สำหรับรูปโปรไฟล์
   status: { type: String, default: "1" }, // 👈 1 = active, 0 = inactive
   interested_tags: [{ type: Number }], // เก็บ tag_id ที่ user เลือก
   favorites: {
