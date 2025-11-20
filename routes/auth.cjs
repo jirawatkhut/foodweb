@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + path.extname(file.originalname)); // ชื่อไฟล์ไม่ซ้ำ
   },
 });
-const upload = multer({ storage });
+
 
 // ✅ REGISTER
 router.post("/register", upload.single("image"), async (req, res) => {
