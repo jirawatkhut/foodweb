@@ -3,7 +3,6 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import api from "../context/api.js";
-import { getImageUrl } from "../context/api.js";
 const ShowRecipeView = () => {
   const { token, user_id } = useContext(AuthContext);
   const [recipes, setRecipes] = useState([]);
@@ -184,7 +183,7 @@ const ShowRecipeView = () => {
                 >
                   {r.image ? (
                     <img
-                      src={getImageUrl(r.image)}
+                      src={`/uploads/${r.image}`}
                       alt={r.title}
                       className="w-full h-48 object-cover"
                     />

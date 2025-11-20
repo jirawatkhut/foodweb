@@ -7,8 +7,15 @@ const mongoose = require("mongoose");
 
 const router = express.Router();
 
-// setup multer (memory storage) — files will be uploaded to GridFS
-const storage = multer.memoryStorage();
+// setup multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 const upload = multer({ storage });
 
 // middleware ตรวจสอบ token
@@ -92,27 +99,10 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
       ingredients,
       instructions,
       tags: Array.isArray(tags) ? tags.map(String) : [String(tags)],
-      image: null,
+      image: req.file ? req.file.filename : null,
       staring_status: staring_status === "true" || staring_status === true,
       created_by: req.user.user_id,
     });
-
-    // if an image file is provided, upload it to GridFS
-    if (req.file) {
-      const bucket = req.app.locals.gfsBucket;
-      if (!bucket) return res.status(500).json({ message: "GridFS not initialized" });
-
-      const fileId = await new Promise((resolve, reject) => {
-        const uploadStream = bucket.openUploadStream(req.file.originalname, {
-          contentType: req.file.mimetype,
-        });
-        uploadStream.end(req.file.buffer);
-        uploadStream.on("finish", (file) => resolve(file._id));
-        uploadStream.on("error", (err) => reject(err));
-      });
-
-      recipe.image = fileId.toString();
-    }
 
     await recipe.save();
     res.json({ message: "Recipe created", recipe });
@@ -144,35 +134,8 @@ router.put("/:id", verifyToken, upload.single("image"), async (req, res) => {
       staring_status: staring_status === "true" || staring_status === true,
     };
 
-    const recipe = await Recipe.findById(req.params.id);
-    if (!recipe) return res.status(404).json({ message: "Recipe not found" });
-
-    // if new image uploaded, store to GridFS and delete old file (if any)
     if (req.file) {
-      const bucket = req.app.locals.gfsBucket;
-      if (!bucket) return res.status(500).json({ message: "GridFS not initialized" });
-
-      // upload new
-      const fileId = await new Promise((resolve, reject) => {
-        const uploadStream = bucket.openUploadStream(req.file.originalname, {
-          contentType: req.file.mimetype,
-        });
-        uploadStream.end(req.file.buffer);
-        uploadStream.on("finish", (file) => resolve(file._id));
-        uploadStream.on("error", (err) => reject(err));
-      });
-
-      // delete old file if present
-      if (recipe.image) {
-        try {
-          const oldId = new mongoose.Types.ObjectId(recipe.image);
-          await bucket.delete(oldId);
-        } catch (e) {
-          console.warn("Old image delete failed:", e.message);
-        }
-      }
-
-      updateData.image = fileId.toString();
+      updateData.image = req.file.filename;
     }
 
     await Recipe.findByIdAndUpdate(req.params.id, updateData);
@@ -186,21 +149,6 @@ router.put("/:id", verifyToken, upload.single("image"), async (req, res) => {
 // ✅ DELETE recipe
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
-    const recipe = await Recipe.findById(req.params.id);
-    if (!recipe) return res.status(404).json({ message: "Recipe not found" });
-
-    // delete image from GridFS if exists
-    if (recipe.image) {
-      try {
-        const bucket = req.app.locals.gfsBucket;
-        if (bucket) {
-          await bucket.delete(new mongoose.Types.ObjectId(recipe.image));
-        }
-      } catch (e) {
-        console.warn("Delete image from GridFS failed:", e.message);
-      }
-    }
-
     await Recipe.findByIdAndDelete(req.params.id);
     res.json({ message: "Recipe deleted" });
   } catch (err) {

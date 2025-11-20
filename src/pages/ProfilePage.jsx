@@ -2,7 +2,6 @@ import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api from "../context/api.js";
-import { getImageUrl } from "../context/api.js";
 import { AuthContext } from "../context/AuthContext";
 
 const ProfilePage = () => {
@@ -78,7 +77,7 @@ const ProfilePage = () => {
       tel: profile.tel || "",
       image: null,
     });
-    setPreview(profile.image ? getImageUrl(profile.image) : null);
+    setPreview(profile.image ? `/uploads/${profile.image}` : null);
     setShowEdit(true);
   };
 
@@ -168,7 +167,7 @@ const ProfilePage = () => {
       onClick={() => onNavigate(item._id)}
     >
       {item.image ? (
-        <img src={getImageUrl(item.image)} alt={item.title} className="w-24 h-20 object-cover rounded" />
+        <img src={`/uploads/${item.image}`} alt={item.title} className="w-24 h-20 object-cover rounded" />
       ) : (
         <div className="w-24 h-20 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-sm rounded">
           ไม่มีรูป
@@ -208,7 +207,7 @@ const ProfilePage = () => {
         <div className="flex items-center gap-6 mb-6">
           {profile.image ? (
             <img
-              src={getImageUrl(profile.image)}
+              src={`/uploads/${profile.image}`}
               alt="profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-indigo-200"
             />

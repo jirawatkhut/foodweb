@@ -18,8 +18,6 @@ mongoose.connect('mongodb+srv://db_user_01:huRWTPn9rtfZFDZy@jib.bjdsdg3.mongodb.
 
 app.use("/uploads", express.static("uploads"));
 
-// GridFS will be available after mongoose connection open
-
 const authRoutes = require("./routes/auth.cjs");
 app.use("/api/auth", authRoutes);
 
@@ -35,22 +33,8 @@ app.use("/api/reports", reportsRoute);
 const commentsRoute = require("./routes/comments.cjs");
 app.use("/api/comments", commentsRoute);
 
-const uploadsRoute = require("./routes/uploads.cjs");
-app.use("/api/uploads", uploadsRoute);
-
 mongoose.connection.once("open", async () => {
   console.log("MongoDB connected");
-
-  // init GridFSBucket and attach to app locals for use in routes
-  try {
-    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
-      bucketName: "images",
-    });
-    app.locals.gfsBucket = bucket;
-    console.log("GridFSBucket initialized (bucket: images)");
-  } catch (err) {
-    console.error("GridFS initialization error:", err);
-  }
 
 
   // ✅ เพิ่มข้อมูลตัวอย่าง 3รายการ (ถ้าต้องการ)

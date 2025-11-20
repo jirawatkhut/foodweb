@@ -3,7 +3,6 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 import api from "../context/api.js";
-import { getImageUrl } from "../context/api.js";
 const FavoritePage = () => {
   const { token, user_id } = useContext(AuthContext);
   const [recipes, setRecipes] = useState([]);
@@ -97,7 +96,7 @@ const FavoritePage = () => {
               {/* รูปภาพ */}
               <figure onClick={() => navigate(`/recipe/${r._id}`)}>
                 <img
-                  src={r.image ? getImageUrl(r.image) : "/no-image.jpg"}
+                  src={r.image ? `/uploads/${r.image}` : "/no-image.jpg"}
                   alt={r.title}
                   className="w-full h-56 object-cover"
                 />
