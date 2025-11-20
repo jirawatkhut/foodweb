@@ -4,20 +4,32 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
+const mongoose = require("mongoose");
 const User = require("../models/User.cjs");
 const Recipe = require("../models/Recipe.cjs");
 
 
-// กำหนด storage สำหรับอัปโหลด
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // โฟลเดอร์ uploads
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // ชื่อไฟล์ไม่ซ้ำ
-  },
-});
-const upload = multer({ storage });
+// กำหนด multer ให้ใช้ memory storage — จะอัปโหลดไปยัง GridFS
+const upload = multer({ storage: multer.memoryStorage() });
+
+// helper: upload buffer to GridFS and return stored filename
+const uploadToGridFS = (file) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: 'images' });
+      const filename = Date.now() + path.extname(file.originalname);
+      const uploadStream = bucket.openUploadStream(filename, {
+        metadata: { originalname: file.originalname },
+        contentType: file.mimetype,
+      });
+      uploadStream.end(file.buffer);
+      uploadStream.on('finish', (uploadedFile) => resolve(uploadedFile.filename));
+      uploadStream.on('error', (err) => reject(err));
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
 
 // ✅ REGISTER
 router.post("/register", upload.single("image"), async (req, res) => {
@@ -25,6 +37,16 @@ router.post("/register", upload.single("image"), async (req, res) => {
     const { first_name, last_name, username, password, tel, email, gender, role } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    let gridFilename = null;
+    if (req.file && req.file.buffer) {
+      try {
+        gridFilename = await uploadToGridFS(req.file);
+      } catch (err) {
+        console.error('GridFS upload error (register):', err);
+        return res.status(500).json({ message: 'File upload failed' });
+      }
+    }
 
     const newUser = new User({
       first_name,
@@ -35,7 +57,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
       email,
       gender,
       role,
-      image: req.file ? req.file.filename : null, // เก็บชื่อไฟล์รูป
+      image: gridFilename || (req.file ? req.file.filename : null), // เก็บชื่อไฟล์รูป
     });
 
     await newUser.save();

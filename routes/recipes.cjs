@@ -7,16 +7,29 @@ const mongoose = require("mongoose");
 
 const router = express.Router();
 
-// setup multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage });
+// setup multer (memory storage) — we'll stream buffers into GridFS
+const upload = multer({ storage: multer.memoryStorage() });
+
+// helper: upload buffer to GridFS and return the stored filename
+const uploadToGridFS = (file) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: 'images' });
+      const filename = Date.now() + path.extname(file.originalname);
+      const uploadStream = bucket.openUploadStream(filename, {
+        metadata: { originalname: file.originalname },
+        contentType: file.mimetype,
+      });
+      uploadStream.end(file.buffer);
+      uploadStream.on('finish', (uploadedFile) => {
+        resolve(uploadedFile.filename);
+      });
+      uploadStream.on('error', (err) => reject(err));
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
 
 // middleware ตรวจสอบ token
 const verifyToken = (req, res, next) => {
@@ -94,12 +107,24 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
       }
     }
 
+    const imageFilename = req.file ? req.file.filename : null;
+    // if a file buffer was provided, upload to GridFS
+    let gridFilename = null;
+    if (req.file && req.file.buffer) {
+      try {
+        gridFilename = await uploadToGridFS(req.file);
+      } catch (err) {
+        console.error('GridFS upload error:', err);
+        return res.status(500).json({ message: 'File upload failed' });
+      }
+    }
+
     const recipe = new Recipe({
       title,
       ingredients,
       instructions,
       tags: Array.isArray(tags) ? tags.map(String) : [String(tags)],
-      image: req.file ? req.file.filename : null,
+      image: gridFilename || (req.file ? req.file.filename : null),
       staring_status: staring_status === "true" || staring_status === true,
       created_by: req.user.user_id,
     });
@@ -134,8 +159,14 @@ router.put("/:id", verifyToken, upload.single("image"), async (req, res) => {
       staring_status: staring_status === "true" || staring_status === true,
     };
 
-    if (req.file) {
-      updateData.image = req.file.filename;
+    if (req.file && req.file.buffer) {
+      try {
+        const gridFilename = await uploadToGridFS(req.file);
+        updateData.image = gridFilename;
+      } catch (err) {
+        console.error('GridFS upload error (update):', err);
+        return res.status(500).json({ message: 'File upload failed' });
+      }
     }
 
     await Recipe.findByIdAndUpdate(req.params.id, updateData);

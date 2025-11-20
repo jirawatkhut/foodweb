@@ -5,9 +5,27 @@ const path = require("path");
 
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// CORS: allow Vercel domain or FRONTEND_URL from env. If none set, allow all (dev).
+const allowedOrigins = [];
+if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
+if (process.env.VERCEL_URL) allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
+
+if (allowedOrigins.length === 0) {
+  app.use(cors());
+} else {
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error("Not allowed by CORS"));
+      },
+    })
+  );
+}
+
 app.use(express.json());
 
 // MongoDB Connection
@@ -16,6 +34,7 @@ mongoose.connect('mongodb+srv://db_user_01:huRWTPn9rtfZFDZy@jib.bjdsdg3.mongodb.
   useUnifiedTopology: true,
 });
 
+// static uploads (legacy) — GridFS will be used for new images
 app.use("/uploads", express.static("uploads"));
 
 const authRoutes = require("./routes/auth.cjs");
@@ -46,10 +65,63 @@ mongoose.connection.once("open", async () => {
   // ลบข้อมูลทั้งหมด (ถ้าต้องการ)
   //await Item.deleteMany({});
   //console.log("All items deleted");
+
+  // Create GridFS bucket for images and attach to app.locals for reuse
+  try {
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: "images" });
+    app.locals.gfsBucket = bucket;
+    console.log("GridFSBucket (images) ready");
+  } catch (err) {
+    console.error("GridFSBucket init error:", err);
+  }
 });
 
 app.get("/", (req, res) => {
   res.send("Hello from Express backend 🚀");
+});
+
+// Download image from GridFS by filename
+app.get('/api/images/:filename', async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const db = mongoose.connection.db;
+    const files = await db.collection('images.files').find({ filename }).toArray();
+    if (!files || files.length === 0) return res.status(404).json({ message: 'File not found' });
+    const file = files[0];
+    res.set('Content-Type', file.contentType || 'application/octet-stream');
+    const bucket = app.locals.gfsBucket || new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
+    const downloadStream = bucket.openDownloadStreamByName(filename);
+    downloadStream.on('error', (err) => {
+      console.error('Download stream error', err);
+      res.status(404).end();
+    });
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.error('Get image error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Backwards-compatible route used by frontend: /uploads/:filename
+app.get('/uploads/:filename', async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const db = mongoose.connection.db;
+    const files = await db.collection('images.files').find({ filename }).toArray();
+    if (!files || files.length === 0) return res.status(404).json({ message: 'File not found' });
+    const file = files[0];
+    res.set('Content-Type', file.contentType || 'application/octet-stream');
+    const bucket = app.locals.gfsBucket || new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
+    const downloadStream = bucket.openDownloadStreamByName(filename);
+    downloadStream.on('error', (err) => {
+      console.error('Download stream error', err);
+      res.status(404).end();
+    });
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.error('Get image error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 
