@@ -290,6 +290,16 @@ router.put("/users/:id/favorites", verifyToken, async (req, res) => {
 // ✅ อัพโหลดรูปโปรไฟล์ไป GridFS
 router.post("/users/:id/profile-image", verifyToken, upload.single("profileImage"), uploadToGridFS, async (req, res) => {
   try {
+    // ตรวจสอบ error จากการ upload
+    if (req.uploadError) {
+      return res.status(400).json({ message: "ไม่สามารถอัพโหลดไฟล์ได้: " + req.uploadError.message });
+    }
+
+    // ตรวจสอบว่ามีไฟล์
+    if (!req.fileId) {
+      return res.status(400).json({ message: "ไม่มีไฟล์ที่ส่งมา" });
+    }
+
     // ตรวจสอบสิทธิ์
     if (req.user.role !== "1" && req.user.user_id !== parseInt(req.params.id)) {
       return res.status(403).json({ message: "Forbidden: You can only upload your own profile image" });
@@ -302,6 +312,7 @@ router.post("/users/:id/profile-image", verifyToken, upload.single("profileImage
     if (user.profileImage) {
       try {
         await deleteFile(user.profileImage);
+        console.log(`🗑️ Deleted old profile image: ${user.profileImage}`);
       } catch (err) {
         console.error("Error deleting old profile image:", err);
       }
@@ -313,11 +324,12 @@ router.post("/users/:id/profile-image", verifyToken, upload.single("profileImage
 
     res.json({ 
       message: "อัพโหลดรูปโปรไฟล์สำเร็จ", 
-      profileImageId: req.fileId 
+      profileImageId: req.fileId,
+      fileName: req.fileName,
     });
   } catch (err) {
     console.error("Upload profile image error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error: " + err.message });
   }
 });
 
@@ -338,12 +350,16 @@ router.get("/users/:id/profile-image", async (req, res) => {
 
     // ตั้ง content type
     res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader("Cache-Control", "public, max-age=3600"); // Cache 1 ชั่วโมง
 
     downloadStream.on("error", (err) => {
       console.error("GridFS download error:", err);
-      res.status(404).json({ message: "Image not found" });
+      if (!res.headersSent) {
+        res.status(404).json({ message: "Image not found" });
+      }
     });
 
+    // Stream รูปตรงไปให้ client
     downloadStream.pipe(res);
   } catch (err) {
     console.error("Get profile image error:", err);
@@ -400,10 +416,16 @@ router.put("/users/:id/profile", verifyToken, upload.single("profileImage"), upl
 
     // ถ้ามีการอัพโหลดรูปใหม่
     if (req.fileId) {
+      // ตรวจสอบ error จากการ upload
+      if (req.uploadError) {
+        return res.status(400).json({ message: "ไม่สามารถอัพโหลดไฟล์ได้: " + req.uploadError.message });
+      }
+
       // ลบรูปเก่าถ้ามี
       if (user.profileImage) {
         try {
           await deleteFile(user.profileImage);
+          console.log(`🗑️ Deleted old profile image: ${user.profileImage}`);
         } catch (err) {
           console.error("Error deleting old profile image:", err);
         }
@@ -415,11 +437,19 @@ router.put("/users/:id/profile", verifyToken, upload.single("profileImage"), upl
 
     res.json({ 
       message: "อัปเดตข้อมูลโปรไฟล์สำเร็จ", 
-      user: user 
+      user: {
+        user_id: user.user_id,
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        tel: user.tel,
+        profileImageId: user.profileImage,
+      },
     });
   } catch (err) {
     console.error("Update profile error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error: " + err.message });
   }
 });
 
