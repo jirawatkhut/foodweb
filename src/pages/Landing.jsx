@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
+import Image from "../components/Image";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const Landing = () => {
       onClick={() => onNavigate(item._id)}
     >
       {item.image ? (
-        <img src={`/uploads/${item.image}`} alt={item.title} className="w-24 h-20 object-cover rounded" />
+        <Image image={item.image} alt={item.title} className="w-24 h-20 object-cover rounded" />
       ) : (
         <div className="w-24 h-20 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-sm rounded">
           ไม่มีรูป
@@ -126,8 +127,8 @@ const Landing = () => {
           </div>
           <div className="space-y-3">
             {hotRecipes.map((r) => (
-              <Card key={r._id} item={r} onNavigate={(id) => navigate(`/recipe/${id}`)} />
-            ))}
+                    <Card key={r._id} item={r} onNavigate={(id) => navigate(`/recipe/${id}`)} />
+                  ))}
           </div>
         </section>
 
@@ -146,7 +147,7 @@ const Landing = () => {
               >
                 <div className="w-8 h-8 rounded bg-pink-200 flex items-center justify-center font-bold mr-3 flex-shrink-0">{idx + 1}</div>
                 {r.image ? (
-                  <img src={`/uploads/${r.image}`} alt={r.title} className="w-24 h-20 object-cover rounded" />
+                  <Image image={r.image} alt={r.title} className="w-24 h-20 object-cover rounded" />
                 ) : (
                   <div className="w-24 h-20 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-sm rounded">
                     ไม่มีรูป

@@ -3,6 +3,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
+import Image from "../components/Image";
 
 const Star = ({ filled, onClick }) => (
   <svg
@@ -240,11 +241,7 @@ const deleteRating = async (ratingId) => {
         <div className="card bg-base-100 shadow-xl overflow-hidden">
           <figure>
             {recipe.image ? (
-              <img
-                src={`/uploads/${recipe.image}`}
-                alt={recipe.title}
-                className="w-full h-64 md:h-96 object-cover"
-              />
+              <Image image={recipe.image} alt={recipe.title} className="w-full h-64 md:h-96 object-cover" />
             ) : (
               <div className="w-full h-64 md:h-96 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
                 ไม่มีรูปภาพ
