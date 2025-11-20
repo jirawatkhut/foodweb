@@ -9,7 +9,7 @@ const verifyToken = (req, res, next) => {
     if (!authHeader) return res.status(401).json({ message: "No token provided" });
 
     const token = authHeader.split(" ")[1];
-    jwt.verify(token, "your_jwt_secret", (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret", (err, decoded) => {
         if (err) return res.status(403).json({ message: "Invalid token" });
         req.user = decoded;
         next();

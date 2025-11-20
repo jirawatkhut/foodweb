@@ -7,6 +7,11 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Load .env in development if available (optional)
+try {
+  require('dotenv').config();
+} catch (e) {}
+
 // CORS: allow Vercel domain or FRONTEND_URL from env. If none set, allow all (dev).
 const allowedOrigins = [];
 if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
@@ -28,8 +33,12 @@ if (allowedOrigins.length === 0) {
 
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect('mongodb+srv://db_user_01:huRWTPn9rtfZFDZy@jib.bjdsdg3.mongodb.net/pos?retryWrites=true&w=majority', {
+// MongoDB Connection (use env var if provided)
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://db_user_01:huRWTPn9rtfZFDZy@jib.bjdsdg3.mongodb.net/pos?retryWrites=true&w=majority';
+if (!process.env.MONGODB_URI) {
+  console.warn('Warning: using hard-coded MongoDB URI. Set MONGODB_URI env var in production.');
+}
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
