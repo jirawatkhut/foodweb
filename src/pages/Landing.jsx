@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { AuthContext } from "../context/AuthContext"; // ยังคง import ไว้เผื่อใช้งานในอนาคต
+import { AuthContext } from "../context/AuthContext";
+
+import api from "../context/api.js";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -14,9 +16,7 @@ const Landing = () => {
   useEffect(() => {
     fetchRecipes();
     fetchTags();
-    
-    // ลบ token ออกจาก dependency array เพื่อให้ fetch ข้อมูลได้โดยไม่ต้องรอ token
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []); // กำหนดเป็น [] เพื่อให้เรียกเพียงครั้งเดียวเมื่อ component mount
 
   const Card = ({ item, onNavigate }) => (
@@ -76,7 +76,7 @@ const Landing = () => {
   const fetchRecipes = async () => {
     try {
       // ลบ headers ออก หรือกำหนดให้เป็น {} เพื่อไม่ส่ง Authorization header
-      const res = await axios.get("http://localhost:3000/api/recipes", {}); // ไม่ส่ง headers หรือส่ง { headers: {} }
+      const res = await api.get("/api/recipes", {}); // ไม่ส่ง headers หรือส่ง { headers: {} }
       const data = res.data || [];
 
       // กรองเฉพาะสูตรที่ Active สำหรับ Hot recipes
@@ -107,7 +107,7 @@ const Landing = () => {
   const fetchTags = async () => {
     try {
       // ลบ headers ออก หรือกำหนดให้เป็น {} เพื่อไม่ส่ง Authorization header
-      const res = await axios.get("http://localhost:3000/api/tag", {}); // ไม่ส่ง headers หรือส่ง { headers: {} }
+      const res = await api.get("api/tag", {}); // ไม่ส่ง headers หรือส่ง { headers: {} }
       setTags(res.data || []);
     } catch (err) {
       console.error("Home fetchTags error:", err.message);
