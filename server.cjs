@@ -1,11 +1,10 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const path = require("path");
-
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -16,43 +15,40 @@ mongoose.connect('mongodb+srv://db_user_01:huRWTPn9rtfZFDZy@jib.bjdsdg3.mongodb.
   useUnifiedTopology: true,
 });
 
-app.use("/uploads", express.static("uploads"));
+app.use('/uploads', express.static('uploads'));
 
-const authRoutes = require("./routes/auth.cjs");
-app.use("/api/auth", authRoutes);
+// mount API routes
+const authRoutes = require('./routes/auth.cjs');
+app.use('/api/auth', authRoutes);
 
-const recipeRoutes = require("./routes/recipes.cjs");
-app.use("/api/recipes", recipeRoutes);
+const recipeRoutes = require('./routes/recipes.cjs');
+app.use('/api/recipes', recipeRoutes);
 
-const tagsRoute = require("./routes/tag.cjs");
-app.use("/api/tag", tagsRoute);
+const tagsRoute = require('./routes/tag.cjs');
+app.use('/api/tag', tagsRoute);
 
-const reportsRoute = require("./routes/reports.cjs");
-app.use("/api/reports", reportsRoute);
+const reportsRoute = require('./routes/reports.cjs');
+app.use('/api/reports', reportsRoute);
 
-const commentsRoute = require("./routes/comments.cjs");
-app.use("/api/comments", commentsRoute);
+const commentsRoute = require('./routes/comments.cjs');
+app.use('/api/comments', commentsRoute);
 
-mongoose.connection.once("open", async () => {
-  console.log("MongoDB connected");
+// Create GridFS bucket after connection open and mount images route
+mongoose.connection.once('open', () => {
+  console.log('MongoDB connected');
+  try {
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: 'images' });
+    app.locals.gfsBucket = bucket;
+    console.log('GridFS bucket "images" created');
 
-
-  // ✅ เพิ่มข้อมูลตัวอย่าง 3รายการ (ถ้าต้องการ)
-  //await Item.create({ name: "Banana", price: 50 });
-  //await Item.create({ name: "Orange", price: 80 });
-  //await Item.create({ name: "Apple", price: 100 });
-  //console.log("Sample item inserted");
-
-  // ลบข้อมูลทั้งหมด (ถ้าต้องการ)
-  //await Item.deleteMany({});
-  //console.log("All items deleted");
+    // mount images route (serves /api/images)
+    const imagesRoute = require('./routes/images.cjs');
+    app.use('/api/images', imagesRoute);
+  } catch (err) {
+    console.error('Failed to create GridFS bucket', err);
+  }
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello from Express backend 🚀");
-});
+app.get('/', (req, res) => res.send('Hello from Express backend 🚀'));
 
-
-app.listen(PORT, () =>
-  console.log(`Backend running on http://localhost:${PORT}`)
-);
+app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
