@@ -70,6 +70,52 @@ app.use("/api/reports", reportsRoute);
 const commentsRoute = require("./routes/comments.cjs");
 app.use("/api/comments", commentsRoute);
 
+// Download image from GridFS by filename
+app.get('/api/images/:filename', async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
+    const downloadStream = bucket.openDownloadStreamByName(req.params.filename);
+
+    downloadStream.on('file', (file) => {
+      res.set('Content-Type', file.contentType);
+    });
+
+    downloadStream.on('error', (err) => {
+      console.error('Download stream error:', err);
+      return res.status(404).send('File not found');
+    });
+
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.error('Get image error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Backwards-compatible route used by frontend: /uploads/:filename
+app.get('/uploads/:filename', async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
+    const downloadStream = bucket.openDownloadStreamByName(req.params.filename);
+    
+    downloadStream.on('file', (file) => {
+      res.set('Content-Type', file.contentType);
+    });
+
+    downloadStream.on('error', (err) => {
+      console.error('Download stream error for /uploads/:', err);
+      return res.status(404).send('File not found');
+    });
+
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.error('Get image error for /uploads/:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 mongoose.connection.once("open", async () => {
   console.log("MongoDB connected");
 
