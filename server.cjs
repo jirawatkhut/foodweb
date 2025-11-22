@@ -140,7 +140,6 @@ app.get('/uploads/:filename', async (req, res) => {
 
 
 // Serve frontend
-const __dirname = path.resolve();
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('*', (req, res) => {
