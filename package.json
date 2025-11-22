@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "node --env-file=.env server.cjs",
     "dev": "vite",
+    "dev:backend": "nodemon server.cjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
