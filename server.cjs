@@ -76,7 +76,6 @@ const imageRouteHandler = async (req, res) => {
       // Check for file existence and size
       if (file && file.length > 0) {
         res.set('Content-Type', file.contentType);
-        res.set('Content-Length', file.length);
         downloadStream.pipe(res);
       } else {
         console.error(`File ${req.params.filename} found but has zero length.`);
@@ -96,7 +95,6 @@ const imageRouteHandler = async (req, res) => {
 };
 
 app.get('/api/images/:filename', imageRouteHandler);
-app.get('/uploads/:filename', imageRouteHandler);
 
 
 // --- Frontend Serving ---

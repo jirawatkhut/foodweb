@@ -560,7 +560,7 @@ const MyRecipePage = () => {
               <div className="relative">
                 {r.image ? (
                   <img
-                    src={`/uploads/${r.image}`}
+                    src={`/api/images/${r.image}`}
                     alt={r.title}
                     className="w-full h-48 object-cover"
                   />
