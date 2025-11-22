@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api from "../context/api.js";
+import { API } from "../context/api.js";
 import { AuthContext } from "../context/AuthContext";
 
 const ProfilePage = () => {
@@ -77,7 +78,8 @@ const ProfilePage = () => {
       tel: profile.tel || "",
       image: null,
     });
-    setPreview(profile.image ? `/uploads/${profile.image}` : null);
+    const imgBase = API && API.endsWith('/') ? API.slice(0, -1) : API;
+    setPreview(profile.image ? `${imgBase}/api/images/${profile.image}` : null);
     setShowEdit(true);
   };
 
@@ -167,7 +169,7 @@ const ProfilePage = () => {
       onClick={() => onNavigate(item._id)}
     >
       {item.image ? (
-        <img src={`/uploads/${item.image}`} alt={item.title} className="w-24 h-20 object-cover rounded" />
+        <img src={`${API.endsWith('/') ? API.slice(0,-1) : API}/api/images/${item.image}`} alt={item.title} className="w-24 h-20 object-cover rounded" />
       ) : (
         <div className="w-24 h-20 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-sm rounded">
           ไม่มีรูป
@@ -205,9 +207,9 @@ const ProfilePage = () => {
     <div className="text-black flex flex-col items-center py-10 gap-8">
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
         <div className="flex items-center gap-6 mb-6">
-          {profile.image ? (
+            {profile.image ? (
             <img
-              src={`/uploads/${profile.image}`}
+              src={`${API.endsWith('/') ? API.slice(0,-1) : API}/api/images/${profile.image}`}
               alt="profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-indigo-200"
             />

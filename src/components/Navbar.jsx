@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useContext, useState, useRef, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { API } from "../context/api.js";
 
 const Navbar = () => {
   const { token, role, username, image, logout  } = useContext(AuthContext); 
@@ -117,9 +118,12 @@ const Navbar = () => {
             >
               <img
                  src={
-                 image
-                   ? `/uploads/${image}`
-                   : `/uploads/Placeholder.png`
+                 (() => {
+                   const imgBase = API && API.endsWith('/') ? API.slice(0, -1) : API;
+                   return image
+                     ? `${imgBase}/api/images/${image}`
+                     : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23dddddd'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888888' font-size='24'>U</text></svg>";
+                 })()
                 }
                 alt="profile"
                 style={{

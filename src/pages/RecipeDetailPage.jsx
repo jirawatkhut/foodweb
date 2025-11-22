@@ -3,6 +3,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
+import { API } from "../context/api.js";
 
 const Star = ({ filled, onClick }) => (
   <svg
@@ -241,7 +242,7 @@ const deleteRating = async (ratingId) => {
           <figure>
             {recipe.image ? (
               <img
-                src={`/uploads/${recipe.image}`}
+                src={`${API.endsWith('/') ? API.slice(0,-1) : API}/api/images/${recipe.image}`}
                 alt={recipe.title}
                 className="w-full h-64 md:h-96 object-cover"
               />

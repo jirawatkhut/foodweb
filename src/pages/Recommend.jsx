@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 import api from "../context/api.js";
+import { API } from "../context/api.js";
 
 const Recommend = () => {
   const { token, user_id } = useContext(AuthContext);
@@ -215,7 +216,7 @@ const Recommend = () => {
           <figure>
             {r.image ? (
               <img
-                src={`/uploads/${r.image}`}
+                src={`${API.endsWith('/') ? API.slice(0,-1) : API}/api/images/${r.image}`}
                 alt={r.title}
                 className="w-full h-56 object-cover"
               />
