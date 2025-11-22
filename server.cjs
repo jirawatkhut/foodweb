@@ -73,17 +73,6 @@ app.use("/api/comments", commentsRoute);
 mongoose.connection.once("open", async () => {
   console.log("MongoDB connected");
 
-
-  // ✅ เพิ่มข้อมูลตัวอย่าง 3รายการ (ถ้าต้องการ)
-  //await Item.create({ name: "Banana", price: 50 });
-  //await Item.create({ name: "Orange", price: 80 });
-  //await Item.create({ name: "Apple", price: 100 });
-  //console.log("Sample item inserted");
-
-  // ลบข้อมูลทั้งหมด (ถ้าต้องการ)
-  //await Item.deleteMany({});
-  //console.log("All items deleted");
-
   // Create GridFS bucket for images and attach to app.locals for reuse
   try {
     const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: "images" });
@@ -92,60 +81,19 @@ mongoose.connection.once("open", async () => {
   } catch (err) {
     console.error("GridFSBucket init error:", err);
   }
+
+  // --- Start server and serve frontend only after DB is ready ---
+  
+  // Serve frontend static files
+  app.use(express.static(path.join(__dirname, 'dist')));
+
+  // SPA Fallback: for any request that doesn't match a static file or an API route,
+  // send the React app's index.html file.
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  });
+
+  app.listen(PORT, () =>
+    console.log(`Backend running on http://localhost:${PORT}`)
+  );
 });
-
-// Download image from GridFS by filename
-app.get('/api/images/:filename', async (req, res) => {
-  try {
-    const filename = req.params.filename;
-    const db = mongoose.connection.db;
-    const files = await db.collection('images.files').find({ filename }).toArray();
-    if (!files || files.length === 0) return res.status(404).json({ message: 'File not found' });
-    const file = files[0];
-    res.set('Content-Type', file.contentType || 'application/octet-stream');
-    const bucket = app.locals.gfsBucket || new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
-    const downloadStream = bucket.openDownloadStreamByName(filename);
-    downloadStream.on('error', (err) => {
-      console.error('Download stream error', err);
-      res.status(404).end();
-    });
-    downloadStream.pipe(res);
-  } catch (err) {
-    console.error('Get image error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Backwards-compatible route used by frontend: /uploads/:filename
-app.get('/uploads/:filename', async (req, res) => {
-  try {
-    const filename = req.params.filename;
-    const db = mongoose.connection.db;
-    const files = await db.collection('images.files').find({ filename }).toArray();
-    if (!files || files.length === 0) return res.status(404).json({ message: 'File not found' });
-    const file = files[0];
-    res.set('Content-Type', file.contentType || 'application/octet-stream');
-    const bucket = app.locals.gfsBucket || new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
-    const downloadStream = bucket.openDownloadStreamByName(filename);
-    downloadStream.on('error', (err) => {
-      console.error('Download stream error', err);
-      res.status(404).end();
-    });
-    downloadStream.pipe(res);
-  } catch (err) {
-    console.error('Get image error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-
-// Serve frontend
-app.use(express.static(path.join(__dirname, 'dist')));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-app.listen(PORT, () =>
-  console.log(`Backend running on http://localhost:${PORT}`)
-);
