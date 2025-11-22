@@ -42,19 +42,13 @@ app.use(
 
 app.use(express.json());
 
-// MongoDB Connection (use env var if provided)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://db_user_01:huRWTPn9rtfZFDZy@jib.bjdsdg3.mongodb.net/pos?retryWrites=true&w=majority';
-if (!process.env.MONGODB_URI) {
-  console.warn('Warning: using hard-coded MongoDB URI. Set MONGODB_URI env var in production.');
-}
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+const connectToDb = require("../utils/db.cjs");
 
-// static uploads (legacy) — GridFS will be used for new images
-app.use("/uploads", express.static("uploads"));
+// ... (keep existing requires and app setup) ...
 
+app.use(express.json());
+
+// --- API Routes ---
 const authRoutes = require("./routes/auth.cjs");
 app.use("/api/auth", authRoutes);
 
@@ -70,76 +64,63 @@ app.use("/api/reports", reportsRoute);
 const commentsRoute = require("./routes/comments.cjs");
 app.use("/api/comments", commentsRoute);
 
-// Download image from GridFS by filename
-app.get('/api/images/:filename', async (req, res) => {
+// --- Image Serving Routes ---
+const imageRouteHandler = async (req, res) => {
   try {
+    await connectToDb();
     const db = mongoose.connection.db;
     const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
     const downloadStream = bucket.openDownloadStreamByName(req.params.filename);
 
     downloadStream.on('file', (file) => {
-      res.set('Content-Type', file.contentType);
+      // Check for file existence and size
+      if (file && file.length > 0) {
+        res.set('Content-Type', file.contentType);
+        res.set('Content-Length', file.length);
+        downloadStream.pipe(res);
+      } else {
+        console.error(`File ${req.params.filename} found but has zero length.`);
+        res.status(404).send('File not found or is empty');
+      }
     });
 
     downloadStream.on('error', (err) => {
-      console.error('Download stream error:', err);
+      console.error(`Download stream error for ${req.params.filename}:`, err);
       return res.status(404).send('File not found');
     });
 
-    downloadStream.pipe(res);
   } catch (err) {
-    console.error('Get image error:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error(`General error for ${req.params.filename}:`, err);
+    res.status(500).send('Server error');
   }
+};
+
+app.get('/api/images/:filename', imageRouteHandler);
+app.get('/uploads/:filename', imageRouteHandler);
+
+
+// --- Frontend Serving ---
+
+// This route for /uploads is now obsolete and potentially harmful, 
+// as GridFS is handling image serving. It should be removed.
+// app.use("/uploads", express.static("uploads"));
+
+// Serve frontend static files from the 'dist' folder
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// SPA Fallback: For any request that doesn't match a static file or an API route,
+// send the React app's index.html file. This MUST be the last route.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-// Backwards-compatible route used by frontend: /uploads/:filename
-app.get('/uploads/:filename', async (req, res) => {
-  try {
-    const db = mongoose.connection.db;
-    const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
-    const downloadStream = bucket.openDownloadStreamByName(req.params.filename);
-    
-    downloadStream.on('file', (file) => {
-      res.set('Content-Type', file.contentType);
-    });
 
-    downloadStream.on('error', (err) => {
-      console.error('Download stream error for /uploads/:', err);
-      return res.status(404).send('File not found');
-    });
+// --- Server Listener ---
+// Vercel ignores this, but it's crucial for local development
+app.listen(PORT, () =>
+  console.log(`Backend running on http://localhost:${PORT}`)
+);
 
-    downloadStream.pipe(res);
-  } catch (err) {
-    console.error('Get image error for /uploads/:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+// Export the app for Vercel
+module.exports = app;
 
-mongoose.connection.once("open", async () => {
-  console.log("MongoDB connected");
-
-  // Create GridFS bucket for images and attach to app.locals for reuse
-  try {
-    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: "images" });
-    app.locals.gfsBucket = bucket;
-    console.log("GridFSBucket (images) ready");
-  } catch (err) {
-    console.error("GridFSBucket init error:", err);
-  }
-
-  // --- Start server and serve frontend only after DB is ready ---
-  
-  // Serve frontend static files
-  app.use(express.static(path.join(__dirname, 'dist')));
-
-  // SPA Fallback: for any request that doesn't match a static file or an API route,
-  // send the React app's index.html file.
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  });
-
-  app.listen(PORT, () =>
-    console.log(`Backend running on http://localhost:${PORT}`)
-  );
-});

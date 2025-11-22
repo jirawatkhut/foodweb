@@ -1,3 +1,4 @@
+const connectToDb = require("../utils/db.cjs");
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
@@ -12,9 +13,11 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // helper: upload buffer to GridFS and return the stored filename
 const uploadToGridFS = (file) => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
-      const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: 'images' });
+      await connectToDb();
+      const db = mongoose.connection.db;
+      const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
       const filename = Date.now() + path.extname(file.originalname);
       const uploadStream = bucket.openUploadStream(filename, {
         metadata: { originalname: file.originalname },
@@ -46,6 +49,7 @@ const verifyToken = (req, res, next) => {
 // ✅ GET all recipes
 router.get("/",  async (req, res) => {
   try {
+    await connectToDb();
     const recipes = await Recipe.find();
 
     const users = await mongoose.model("User").find({}, "user_id username").lean();
@@ -75,6 +79,7 @@ router.get("/",  async (req, res) => {
 // ✅ GET recipe by ID
 router.get("/:id", async (req, res) => {
   try {
+    await connectToDb();
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
 
@@ -94,6 +99,7 @@ router.get("/:id", async (req, res) => {
 // ✅ POST add recipe (รองรับ ingredients array)
 router.post("/", verifyToken, upload.single("image"), async (req, res) => {
   try {
+    await connectToDb();
     const { title, instructions, tags, staring_status } = req.body;
     let ingredients = [];
 
@@ -139,6 +145,7 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
 // ✅ PUT update recipe (รองรับ ingredients array)
 router.put("/:id", verifyToken, upload.single("image"), async (req, res) => {
   try {
+    await connectToDb();
     const { title, instructions, tags, staring_status } = req.body;
     let ingredients = [];
 
@@ -179,6 +186,7 @@ router.put("/:id", verifyToken, upload.single("image"), async (req, res) => {
 // ✅ DELETE recipe
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
+    await connectToDb();
     await Recipe.findByIdAndDelete(req.params.id);
     res.json({ message: "Recipe deleted" });
   } catch (err) {
@@ -188,6 +196,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
 
 router.post("/:id/rate", verifyToken, async (req, res) => {
   try {
+    await connectToDb();
     const { score, comment } = req.body;
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
@@ -225,6 +234,7 @@ router.post("/:id/rate", verifyToken, async (req, res) => {
 // ✅ PUT update rating (comment)
 router.put("/:id/rate", verifyToken, async (req, res) => {
   try {
+    await connectToDb();
     const { score, comment } = req.body;
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
@@ -247,6 +257,7 @@ router.put("/:id/rate", verifyToken, async (req, res) => {
 // ✅ DELETE rating (comment)
 router.delete("/:id/rate/:ratingId", verifyToken, async (req, res) => {
   try {
+    await connectToDb();
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
 
@@ -273,6 +284,7 @@ router.delete("/:id/rate/:ratingId", verifyToken, async (req, res) => {
 // ✅ GET: ดึงความคิดเห็นทั้งหมด + คำนวณคะแนนเฉลี่ย
 router.get("/:id/ratings", async (req, res) => {
   try {
+    await connectToDb();
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
 
