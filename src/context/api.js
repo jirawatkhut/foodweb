@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "https://foodweb-3v56.onrender.com/";
+const API = "/";
 export default axios.create({
   baseURL: API,
 });
