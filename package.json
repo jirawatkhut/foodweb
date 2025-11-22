@@ -22,7 +22,7 @@
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "daisyui": "^5.1.27",
-    "express": "^5.1.0",
+    "express": "^4.19.2",
     "gridfs": "^1.0.0",
     "gridfs-stream": "^1.1.1",
     "jsonwebtoken": "^9.0.2",
