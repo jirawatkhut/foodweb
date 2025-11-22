@@ -94,10 +94,6 @@ mongoose.connection.once("open", async () => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello from Express backend 🚀");
-});
-
 // Download image from GridFS by filename
 app.get('/api/images/:filename', async (req, res) => {
   try {
