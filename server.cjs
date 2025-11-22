@@ -42,7 +42,7 @@ app.use(
 
 app.use(express.json());
 
-const connectToDb = require("../utils/db.cjs");
+const connectToDb = require("./utils/db.cjs");
 
 // ... (keep existing requires and app setup) ...
 
