@@ -66,30 +66,33 @@ app.use("/api/comments", commentsRoute);
 
 // --- Image Serving Routes ---
 const imageRouteHandler = async (req, res) => {
+  const filename = req.params.filename;
+  console.log('[imageRoute] request for', filename, 'origin=', req.headers.origin || req.ip);
   try {
     await connectToDb();
     const db = mongoose.connection.db;
-    const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
-    const downloadStream = bucket.openDownloadStreamByName(req.params.filename);
 
-    downloadStream.on('file', (file) => {
-      // Check for file existence and size
-      if (file && file.length > 0) {
-        res.set('Content-Type', file.contentType);
-        downloadStream.pipe(res);
-      } else {
-        console.error(`File ${req.params.filename} found but has zero length.`);
-        res.status(404).send('File not found or is empty');
-      }
-    });
-
-    downloadStream.on('error', (err) => {
-      console.error(`Download stream error for ${req.params.filename}:`, err);
+    // Find the file document in GridFS files collection
+    const fileDoc = await db.collection('images.files').findOne({ filename });
+    if (!fileDoc) {
+      console.log('[imageRoute] file not found in images.files ->', filename);
       return res.status(404).send('File not found');
-    });
+    }
 
+    const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'images' });
+    res.set('Content-Type', fileDoc.contentType || 'application/octet-stream');
+
+    const downloadStream = bucket.openDownloadStreamByName(filename);
+    downloadStream.on('error', (err) => {
+      console.error('[imageRoute] downloadStream error for', filename, err);
+      return res.status(500).send('Error streaming file');
+    });
+    downloadStream.on('end', () => {
+      console.log('[imageRoute] finished streaming', filename);
+    });
+    downloadStream.pipe(res);
   } catch (err) {
-    console.error(`General error for ${req.params.filename}:`, err);
+    console.error('[imageRoute] general error for', filename, err);
     res.status(500).send('Server error');
   }
 };
