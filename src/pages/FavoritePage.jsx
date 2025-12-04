@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import api from "../context/api.js";
 import { API } from "../context/api.js";
+import { getSortedTagList } from "../utils/tagUtils";
 const FavoritePage = () => {
   const { token, user_id } = useContext(AuthContext);
   const [recipes, setRecipes] = useState([]);
@@ -135,23 +136,20 @@ const FavoritePage = () => {
                     : r.ingredients}
                 </p>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {r.tags.map((id) => {
-                      const tag = tags.find((t) => t.tag_id === id);
-                      return (
-                        <button
-                          key={id}
-                          className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (tag) {
-                              navigate(`/showRecipes?tag_id=${tag.tag_id}`);
-                            }
-                          }}
-                        >
-                          {tag ? tag.tag_name : id}
-                        </button>
-                      );
-                    })}
+                  {getSortedTagList(tags, r.tags).map((tg) => (
+                    <button
+                      key={tg.id}
+                      className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (tg.found) {
+                          navigate(`/showRecipes?tag_id=${tg.id}`);
+                        }
+                      }}
+                    >
+                      {tg.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
 import { API } from "../context/api.js";
+import { getSortedTagList } from "../utils/tagUtils";
 import { set } from "mongoose";
 
 const MyRecipePage = () => {
@@ -587,17 +588,14 @@ const MyRecipePage = () => {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {r.tags && r.tags.length > 0 ? (
-                    r.tags.map((id) => {
-                      const tag = tags.find((t) => t.tag_id === id);
-                      return (
-                        <span
-                          key={id}
-                          className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded-full"
-                        >
-                          {tag ? tag.tag_name : id}
-                        </span>
-                      );
-                    })
+                    getSortedTagList(tags, r.tags).map((tg) => (
+                      <span
+                        key={tg.id}
+                        className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded-full"
+                      >
+                        {tg.name}
+                      </span>
+                    ))
                   ) : (
                     <span className="text-gray-400 text-sm">ไม่มีแท็ก</span>
                   )}

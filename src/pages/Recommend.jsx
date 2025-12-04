@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import api from "../context/api.js";
 import { API } from "../context/api.js";
+import { getSortedTagList } from "../utils/tagUtils";
 
 const Recommend = () => {
   const { token, user_id } = useContext(AuthContext);
@@ -230,26 +231,23 @@ const Recommend = () => {
 
 
                     <div className="card-body" onClick={() => navigate(`/recipe/${r._id}`)}>
-                      <h2 className="card-title text-lg">{r.title}</h2>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                  {r.tags.map((id) => {
-                      const tag = tags.find((t) => t.tag_id === id);
-                      return (
+                          <h2 className="card-title text-lg">{r.title}</h2>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                      {getSortedTagList(tags, r.tags).map((tg) => (
                         <button
-                          key={id}
+                          key={tg.id}
                           className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (tag) {
-                              navigate(`/showRecipes?tag_id=${tag.tag_id}`);
+                            if (tg.found) {
+                              navigate(`/showRecipes?tag_id=${tg.id}`);
                             }
                           }}
                         >
-                          {tag ? tag.tag_name : id}
+                          {tg.name}
                         </button>
-                      );
-                    })}
-                </div>
+                      ))}
+                    </div>
                       <p className="text-sm text-yellow-600">
                   ⭐ คะแนนเฉลี่ย: {r.average ? Number(r.average).toFixed(1) : "0.0"} / 5.0
                       </p>
