@@ -383,30 +383,30 @@ const MyRecipePage = () => {
                   >
                     <option value="">-- หน่วย --</option>
                     <option value="กรัม">กรัม</option>
+                    <option value="กระป๋อง">กระป๋อง</option>
+                    <option value="ก้าน">ก้าน</option>
+                    <option value="กำ">กำ</option>
                     <option value="ขีด">ขีด</option>
-                    <option value="ช้อนโต๊ะ">ช้อนโต๊ะ</option>
+                    <option value="ขวด">ขวด</option>
+                    <option value="ชิ้น">ชิ้น</option>
                     <option value="ช้อนชา">ช้อนชา</option>
-                    <option value="มิลลิลิตร">มิลลิลิตร</option>
+                    <option value="ช้อนโต๊ะ">ช้อนโต๊ะ</option>
                     <option value="ตัว">ตัว</option>
                     <option value="ถ้วย">ถ้วย</option>
-                    <option value="ลูก">ลูก</option>
-                    <option value="ชิ้น">ชิ้น</option>
-                    <option value="แพ็ค">แพ็ค</option>
-                    <option value="ขวด">ขวด</option>
+                    <option value="ถุง">ถุง</option>
+                    <option value="มัด">มัด</option>
+                    <option value="มิลลิลิตร">มิลลิลิตร</option>
                     <option value="เม็ด">เม็ด</option>
-                    <option value="ฟอง">ฟอง </option>
+                    <option value="ลูก">ลูก</option>
+                    <option value="เล็กน้อย">เล็กน้อย</option>
+                    <option value="หยด">หยด</option>
+                    <option value="หยิบมือ">หยิบมือ</option>
+                    <option value="ห่อ">ห่อ</option>
                     <option value="หัว">หัว</option>
                     <option value="แผ่น">แผ่น</option>
-                    <option value="กำ">กำ</option>
-                    <option value="หยิบมือ">หยิบมือ</option>
-                    <option value="หยด">หยด</option>
-                    <option value="ก้าน">ก้าน</option>
-                    <option value="มัด">มัด</option>
+                    <option value="แพ็ค">แพ็ค</option>
                     <option value="พวง">พวง</option>
-                    <option value="ห่อ">ห่อ</option>
-                    <option value="ถุง">ถุง</option>
-                    <option value="กระป๋อง">กระป๋อง</option>
-                    <option value="เล็กน้อย">เล็กน้อย</option> {/* ✅ เพิ่มอันนี้ */}
+                    <option value="ฟอง">ฟอง</option>
                   </select>
 
                   {ingredients.length > 1 && (
@@ -523,8 +523,8 @@ const MyRecipePage = () => {
                           }
                         }}
                         className={`px-3 py-1 border rounded-full cursor-pointer ${form.tags.includes(t.tag_id)
-                            ? "bg-green-200 border-green-500"
-                            : "bg-gray-100 hover:bg-gray-200"
+                          ? "bg-green-200 border-green-500"
+                          : "bg-gray-100 hover:bg-gray-200"
                           }`}
                       >
                         {t.tag_name}
@@ -584,8 +584,8 @@ const MyRecipePage = () => {
                 )}
                 <span
                   className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full shadow ${r.staring_status
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-500 text-white"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-500 text-white"
                     }`}
                 >
                   {r.staring_status ? "สาธารณะ" : "ส่วนตัว"}
