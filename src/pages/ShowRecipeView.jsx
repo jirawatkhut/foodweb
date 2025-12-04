@@ -143,11 +143,13 @@ const ShowRecipeView = () => {
                           onChange={(e) => setSelectedTag(e.target.value)}
                         >
                           <option value="">-- ทั้งหมด --</option>
-                          {grouped[cat].map((t) => (
-                            <option key={t.tag_id} value={String(t.tag_id)}>
-                              {t.tag_name}
-                            </option>
-                          ))}
+                          {[...grouped[cat]]
+                            .sort((a, b) => String(a.tag_name).localeCompare(String(b.tag_name), "th"))
+                            .map((t) => (
+                              <option key={t.tag_id} value={String(t.tag_id)}>
+                                {t.tag_name}
+                              </option>
+                            ))}
                         </select>
 
                         {cat === 'types' && (
