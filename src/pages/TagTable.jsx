@@ -194,12 +194,6 @@ const TagTable = () => {
                         แก้ไข
                       </button>
                       <> </>
-                      <button
-                        onClick={() => handleDelete(t._id)}
-                        className="btn btn-outline btn-sm btn-error"
-                      >
-                        ลบ
-                      </button>
                     </td>
                   </tr>
                 ))
