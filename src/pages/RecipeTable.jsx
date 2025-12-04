@@ -514,6 +514,7 @@ const RecipeTable = () => {
       {/* Card 2: Table */}
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
+          <h2 align="right">เรียงตามเวลา</h2>
           {/* ตารางสูตรอาหาร */}
           <div className="h-96 overflow-x-auto">
             <table className="table table-s w-full table-pin-rows rounded-box bg-base-100">
