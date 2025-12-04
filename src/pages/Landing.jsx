@@ -123,7 +123,7 @@ const Landing = () => {
         <section className="bg-white rounded shadow p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-2xl">เมนูยอดนิยม</h2>
-            <span className="text-xs text-gray-500">เรียกดูล่าสุด</span>
+            <span className="text-xs text-gray-500">ยอดฮิตตลอดกาล</span>
           </div>
           <div className="space-y-3">
             {hotRecipes.map((r) => (
