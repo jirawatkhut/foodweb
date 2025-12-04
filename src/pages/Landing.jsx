@@ -19,6 +19,16 @@ const Landing = () => {
 
   }, []); // กำหนดเป็น [] เพื่อให้เรียกเพียงครั้งเดียวเมื่อ component mount
 
+  // Return tags for an item sorted alphabetically by tag name (Thai-aware).
+  const getSortedTagList = (itemTags = []) => {
+    const list = itemTags.map((id) => {
+      const tag = tags.find((t) => t.tag_id === id);
+      return { id, name: tag ? tag.tag_name : id, found: !!tag };
+    });
+    list.sort((a, b) => String(a.name).localeCompare(String(b.name), "th"));
+    return list;
+  };
+
   const Card = ({ item, onNavigate }) => (
     <div
       className="flex bg-pink-50 rounded shadow-sm p-2 items-start cursor-pointer hover:bg-pink-100 transition-colors"
@@ -48,23 +58,20 @@ const Landing = () => {
           )}
         </div>
         <div className="flex flex-wrap gap-1 mt-2">
-          {item.tags.map((id) => {
-            const tag = tags.find((t) => t.tag_id === id);
-            return (
-              <button
-                key={id}
-                className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent card's onClick from firing
-                  if (tag) {
-                    navigate(`/showRecipes?tag_id=${tag.tag_id}`);
-                  }
-                }}
-              >
-                {tag ? tag.tag_name : id}
-              </button>
-            );
-          })}
+          {getSortedTagList(item.tags).map((tg) => (
+            <button
+              key={tg.id}
+              className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card's onClick from firing
+                if (tg.found) {
+                  navigate(`/showRecipes?tag_id=${tg.id}`);
+                }
+              }}
+            >
+              {tg.name}
+            </button>
+          ))}
         </div>
         <p className="text-sm text-yellow-600">
                     ⭐ คะแนนเฉลี่ย: {item.average ? Number(item.average).toFixed(1) : "0.0"} / 5.0
@@ -169,23 +176,20 @@ const Landing = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {r.tags.map((id) => {
-                      const tag = tags.find((t) => t.tag_id === id);
-                      return (
-                        <button
-                          key={id}
-                          className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (tag) {
-                              navigate(`/showRecipes?tag_id=${tag.tag_id}`);
-                            }
-                          }}
-                        >
-                          {tag ? tag.tag_name : id}
-                        </button>
-                      );
-                    })}
+                    {getSortedTagList(r.tags).map((tg) => (
+                      <button
+                        key={tg.id}
+                        className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (tg.found) {
+                            navigate(`/showRecipes?tag_id=${tg.id}`);
+                          }
+                        }}
+                      >
+                        {tg.name}
+                      </button>
+                    ))}
                   </div>
                   <p className="text-sm text-yellow-600">
                     ⭐ คะแนนเฉลี่ย: {r.average ? Number(r.average).toFixed(1) : "0.0"} / 5.0
