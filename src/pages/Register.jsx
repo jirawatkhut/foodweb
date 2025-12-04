@@ -134,14 +134,14 @@ const [form, setForm] = useState({
         <legend className="fieldset-legend text-base">รูปโปรไฟล์ :</legend>
         <input type="file" accept="image/*" onChange={handleFileChange} className="border border-gray-300 rounded px-2 py-1 mr-5 bg-white text-gray-900" />
         <br />
-        <label className="flex items-start gap-2 mt-4 text-sm">
+        <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
             checked={agreedToTerms}
             onChange={(e) => setAgreedToTerms(e.target.checked)}
             className="mt-1 accent-blue-500"
           />
-          <span className="text-gray-700">
+          <span className="text-gray-700 ">
             ผู้ใช้งานตกลงและยินยอมที่จะให้ข้อมูลกับทางเราเพื่อวัตถุประสงค์ตามที่ระบุไว้ และทางเราขอสงวนสิทธิ์ที่จะไม่รับผิดชอบต่อการละเมิดลิขสิทธิ์หรือสิทธิ์ในทรัพย์สินทางปัญญาอื่นใดของข้อมูลที่ผู้ใช้งานมอบให้
           </span>
         </label>
