@@ -19,6 +19,7 @@ const [form, setForm] = useState({
 
   const [image, setimage] = useState(null);
   const [error, setError] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -36,6 +37,11 @@ const [form, setForm] = useState({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!agreedToTerms) {
+      setError("กรุณายอมรับเงื่อนไขและข้อตกลง");
+      return;
+    }
 
     try {
       const data = new FormData();
@@ -128,6 +134,17 @@ const [form, setForm] = useState({
         <legend className="fieldset-legend text-base">รูปโปรไฟล์ :</legend>
         <input type="file" accept="image/*" onChange={handleFileChange} className="border border-gray-300 rounded px-2 py-1 mr-5 bg-white text-gray-900" />
         <br />
+        <label className="flex items-start gap-2 mt-4 text-sm">
+          <input
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="mt-1 accent-blue-500"
+          />
+          <span className="text-gray-700">
+            ผู้ใช้งานตกลงและยินยอมที่จะให้ข้อมูลกับทางเราเพื่อวัตถุประสงค์ตามที่ระบุไว้ และทางเราขอสงวนสิทธิ์ที่จะไม่รับผิดชอบต่อการละเมิดลิขสิทธิ์หรือสิทธิ์ในทรัพย์สินทางปัญญาอื่นใดของข้อมูลที่ผู้ใช้งานมอบให้
+          </span>
+        </label>
         <div className="mt-2 mb-2 text-sm text-gray-500 justify-end flex">
           <button className="btn btn-success"
           type="submit">สมัครสมาชิก</button>
