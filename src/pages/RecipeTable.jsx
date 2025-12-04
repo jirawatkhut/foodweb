@@ -24,6 +24,7 @@ const RecipeTable = () => {
   const [editId, setEditId] = useState(null);
   const [tagSearch, setTagSearch] = useState("");
   const [searchTerm, setSearchTerm] = useState(""); 
+  const [sortBy, setSortBy] = useState("latest"); // 'latest' | 'alpha'
 
   const [suggestedTags, setSuggestedTags] = useState([]);
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
@@ -210,6 +211,14 @@ const RecipeTable = () => {
   const filteredRecipes = recipes.filter((u) =>
     u.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Apply sorting to the filtered list before rendering
+  const displayedRecipes = [...filteredRecipes];
+  if (sortBy === "latest") {
+    displayedRecipes.sort((a, b) => new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0));
+  } else if (sortBy === "alpha") {
+    displayedRecipes.sort((a, b) => String(a.title).localeCompare(String(b.title), "th"));
+  }
   return (
     <div className="space-y-6">
       {/* Card 1: Header, Search, and Add Button */}
@@ -235,9 +244,20 @@ const RecipeTable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ padding: "5px", flex: 1 }}
             />
-            <button onClick={() => setShowForm(true)} className="btn btn-outline mb-2">
-              + เพิ่มสูตร
-            </button>
+            <div className="flex items-center gap-3">
+              <label className="whitespace-nowrap">เรียง:</label>
+              <select
+                className="select select-sm select-bordered"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="latest">ล่าสุด</option>
+                <option value="alpha">ตัวอักษร</option>
+              </select>
+              <button onClick={() => setShowForm(true)} className="btn btn-outline mb-2">
+                + เพิ่มสูตร
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -536,7 +556,7 @@ const RecipeTable = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredRecipes.map((r) => (
+                  displayedRecipes.map((r) => (
                     <tr key={r._id}>
                       
                       <td>{r.title}</td>
