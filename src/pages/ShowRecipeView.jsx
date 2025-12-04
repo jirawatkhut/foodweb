@@ -91,6 +91,20 @@ const ShowRecipeView = () => {
     return matchSearch && matchTag;
   });
 
+  // Group tags by category and sort each group's tag_name alphabetically (Thai-aware, fallback to English)
+  const groupedTags = tags.reduce((acc, t) => {
+    const key = t.tag_category_id || "other";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(t);
+    return acc;
+  }, {});
+
+  Object.keys(groupedTags).forEach((k) => {
+    groupedTags[k].sort((a, b) =>
+      String(a.tag_name || "").trim().localeCompare(String(b.tag_name || "").trim(), ["th", "en"], { sensitivity: "base" })
+    );
+  });
+
   return (
     <div className="min-h-screen bg-base-200 p-8">
       <h1 className="text-4xl font-bold text-center mb-8">
