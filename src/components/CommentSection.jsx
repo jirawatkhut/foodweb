@@ -91,9 +91,10 @@ const CommentSection = ({ recipeId }) => {
                 <p className="mb-4 text-gray-600">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</p>
             )}
 
-            <div className="space-y-4">
+            <div className="mt-4 bg-white rounded-lg shadow-md p-4">
+                <div className="space-y-4">
                     {comments.map((comment) => (
-                        <div key={comment._id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <div key={comment._id} className="bg-gray-100 p-4 rounded-md">
                             <div className="flex justify-between items-start gap-4">
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
@@ -115,6 +116,7 @@ const CommentSection = ({ recipeId }) => {
                             </div>
                         </div>
                     ))}
+                </div>
             </div>
         </div>
     );
