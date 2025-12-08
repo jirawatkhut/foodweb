@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import api from "../context/api.js";
 import { API } from "../context/api.js";
+import { getSortedTagList } from "../utils/tagUtils";
 const ShowRecipeView = () => {
   const { token, user_id } = useContext(AuthContext);
   const [recipes, setRecipes] = useState([]);
@@ -90,6 +91,20 @@ const ShowRecipeView = () => {
     return matchSearch && matchTag;
   });
 
+  // Group tags by category and sort each group's tag_name alphabetically (Thai-aware, fallback to English)
+  const groupedTags = tags.reduce((acc, t) => {
+    const key = t.tag_category_id || "other";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(t);
+    return acc;
+  }, {});
+
+  Object.keys(groupedTags).forEach((k) => {
+    groupedTags[k].sort((a, b) =>
+      String(a.tag_name || "").trim().localeCompare(String(b.tag_name || "").trim(), ["th", "en"], { sensitivity: "base" })
+    );
+  });
+
   return (
     <div className="min-h-screen bg-base-200 p-8">
       <h1 className="text-4xl font-bold text-center mb-8">
@@ -142,11 +157,13 @@ const ShowRecipeView = () => {
                           onChange={(e) => setSelectedTag(e.target.value)}
                         >
                           <option value="">-- ทั้งหมด --</option>
-                          {grouped[cat].map((t) => (
-                            <option key={t.tag_id} value={String(t.tag_id)}>
-                              {t.tag_name}
-                            </option>
-                          ))}
+                          {[...grouped[cat]]
+                            .sort((a, b) => String(a.tag_name).localeCompare(String(b.tag_name), "th"))
+                            .map((t) => (
+                              <option key={t.tag_id} value={String(t.tag_id)}>
+                                {t.tag_name}
+                              </option>
+                            ))}
                         </select>
 
                         {cat === 'types' && (
@@ -246,23 +263,20 @@ const ShowRecipeView = () => {
                     : r.ingredients}
                 </p>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {r.tags.map((id) => {
-                      const tag = tags.find((t) => t.tag_id === id);
-                      return (
-                        <button
-                          key={id}
-                          className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (tag) {
-                              navigate(`/showRecipes?tag_id=${tag.tag_id}`);
-                            }
-                          }}
-                        >
-                          {tag ? tag.tag_name : id}
-                        </button>
-                      );
-                    })}
+                  {getSortedTagList(tags, r.tags).map((tg) => (
+                    <button
+                      key={tg.id}
+                      className="badge badge-success badge-outline text-xs hover:bg-success hover:text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (tg.found) {
+                          navigate(`/showRecipes?tag_id=${tg.id}`);
+                        }
+                      }}
+                    >
+                      {tg.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

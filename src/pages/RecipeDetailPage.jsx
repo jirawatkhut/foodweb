@@ -5,6 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import api from "../context/api.js";
 import { formatThaiDateTime } from "../utils/formatDate";
 import { API } from "../context/api.js";
+import { getSortedTagList } from "../utils/tagUtils";
 
 const Star = ({ filled, onClick }) => (
   <svg
@@ -277,22 +278,19 @@ const deleteRating = async (ratingId) => {
             </div>
 
             <div className="flex flex-wrap gap-2 mt-2">
-              {recipe.tags.map((id) => {
-                const tag = tags.find((t) => t.tag_id === id);
-                return (
-                  <button
-                    key={id}
-                    className="badge badge-outline badge-success hover:bg-success hover:text-white"
-                    onClick={() => {
-                      if (tag) {
-                        navigate(`/showRecipes?tag_id=${tag.tag_id}`);
-                      }
-                    }}
-                  >
-                    {tag ? tag.tag_name : id}
-                  </button>
-                );
-              })}
+              {getSortedTagList(tags, recipe.tags).map((tg) => (
+                <button
+                  key={tg.id}
+                  className="badge badge-outline badge-success hover:bg-success hover:text-white"
+                  onClick={() => {
+                    if (tg.found) {
+                      navigate(`/showRecipes?tag_id=${tg.id}`);
+                    }
+                  }}
+                >
+                  {tg.name}
+                </button>
+              ))}
             </div>
 
             <div className="flex items-center mt-4 text-sm text-gray-500">

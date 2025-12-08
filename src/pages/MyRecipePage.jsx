@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
 import { API } from "../context/api.js";
+import { getSortedTagList } from "../utils/tagUtils";
 import { set } from "mongoose";
 
 const MyRecipePage = () => {
@@ -54,7 +55,7 @@ const MyRecipePage = () => {
       console.error("Error fetching initial data:", err);
       const status = err.response?.status;
       if (status === 401 || status === 403) {
-        try { logout(); } catch {}
+        try { logout(); } catch { }
         navigate("/login");
       }
     }
@@ -70,7 +71,7 @@ const MyRecipePage = () => {
       console.error("Fetch error:", err.response?.data || err.message);
       const status = err.response?.status;
       if (status === 401 || status === 403) {
-        try { logout(); } catch {}
+        try { logout(); } catch { }
         navigate("/login");
       }
     }
@@ -103,23 +104,23 @@ const MyRecipePage = () => {
   };
 
   const handleTagSuggestion = () => {
-  if (!form.title) {
-    alert("กรุณากรอกชื่อสูตรก่อน");
-    return;
-  }
+    if (!form.title) {
+      alert("กรุณากรอกชื่อสูตรก่อน");
+      return;
+    }
 
-  const normalizedTitle = form.title.toLowerCase();
-  const matchedTags = tags.filter((t) =>
-    normalizedTitle.includes(t.tag_name.toLowerCase())
-  );
+    const normalizedTitle = form.title.toLowerCase();
+    const matchedTags = tags.filter((t) =>
+      normalizedTitle.includes(t.tag_name.toLowerCase())
+    );
 
-  if (matchedTags.length > 0) {
-    setSuggestedTags(matchedTags);
-    setShowSuggestionModal(true);
-  } else {
-    alert("ไม่พบแท็กที่เกี่ยวข้องกับชื่อสูตรนี้");
-  }
-};
+    if (matchedTags.length > 0) {
+      setSuggestedTags(matchedTags);
+      setShowSuggestionModal(true);
+    } else {
+      alert("ไม่พบแท็กที่เกี่ยวข้องกับชื่อสูตรนี้");
+    }
+  };
 
   // 🧂 ส่วนผสม dynamic
   const handleIngredientChange = (index, field, value) => {
@@ -237,7 +238,7 @@ const MyRecipePage = () => {
       // If token invalid or expired, force logout and redirect to login
       if (status === 401 || status === 403) {
         alert("เซสชันหมดอายุหรือไม่ถูกต้อง โปรดเข้าสู่ระบบใหม่");
-        try { logout(); } catch {}
+        try { logout(); } catch { }
         navigate("/login");
         return;
       }
@@ -284,7 +285,7 @@ const MyRecipePage = () => {
         console.error("Delete error:", err.response?.data || err.message);
         const status = err.response?.status;
         if (status === 401 || status === 403) {
-          try { logout(); } catch {}
+          try { logout(); } catch { }
           navigate("/login");
           return;
         }
@@ -357,44 +358,56 @@ const MyRecipePage = () => {
                     required
                   />
                   <input
-                      type="number"
-                      placeholder="จำนวน"
-                      value={ing.unit === "เล็กน้อย" ? "" : ing.quantity}
-                      onChange={(e) =>
-                        handleIngredientChange(index, "quantity", e.target.value)
-                      }
-                      className="input input-bordered w-1/4"
-                      disabled={ing.unit === "เล็กน้อย"} // ❗ ปิดการใช้งานเมื่อเลือกเล็กน้อย
-                      required={ing.unit !== "เล็กน้อย"} // ❗ ไม่บังคับกรอก
-                    />
+                    type="number"
+                    placeholder="จำนวน"
+                    value={ing.unit === "เล็กน้อย" ? "" : ing.quantity}
+                    onChange={(e) =>
+                      handleIngredientChange(index, "quantity", e.target.value)
+                    }
+                    className="input input-bordered w-1/4"
+                    disabled={ing.unit === "เล็กน้อย"} // ❗ ปิดการใช้งานเมื่อเลือกเล็กน้อย
+                    required={ing.unit !== "เล็กน้อย"} // ❗ ไม่บังคับกรอก
+                  />
 
-                    <select
-                      value={ing.unit}
-                      onChange={(e) => {
-                        handleIngredientChange(index, "unit", e.target.value);
-                        // ถ้าเลือก "เล็กน้อย" ให้ล้างค่า quantity
-                        if (e.target.value === "เล็กน้อย") {
-                          handleIngredientChange(index, "quantity", "");
-                        }
-                      }}
-                      className="select select-bordered w-1/4"
-                      required
-                    >
-                      <option value="">-- หน่วย --</option>
-                      <option value="กรัม">กรัม</option>
-                      <option value="ขีด">ขีด</option>
-                      <option value="ช้อนโต๊ะ">ช้อนโต๊ะ</option>
-                      <option value="ช้อนชา">ช้อนชา</option>
-                      <option value="มิลลิลิตร">มิลลิลิตร</option>
-                      <option value="ตัว">ตัว</option>
-                      <option value="ถ้วย">ถ้วย</option>
-                      <option value="ลูก">ลูก</option>
-                      <option value="ชิ้น">ชิ้น</option>
-                      <option value="แพ็ค">แพ็ค</option>
-                      <option value="ขวด">ขวด</option>
-                      <option value="เม็ด">เม็ด</option>
-                      <option value="เล็กน้อย">เล็กน้อย</option> {/* ✅ เพิ่มอันนี้ */}
-                    </select>
+                  <select
+                    value={ing.unit}
+                    onChange={(e) => {
+                      handleIngredientChange(index, "unit", e.target.value);
+                      // ถ้าเลือก "เล็กน้อย" ให้ล้างค่า quantity
+                      if (e.target.value === "เล็กน้อย") {
+                        handleIngredientChange(index, "quantity", "");
+                      }
+                    }}
+                    className="select select-bordered w-1/4"
+                    required
+                  >
+                    <option value="">-- หน่วย --</option>
+                    <option value="กรัม">กรัม</option>
+                    <option value="กระป๋อง">กระป๋อง</option>
+                    <option value="ก้าน">ก้าน</option>
+                    <option value="กำ">กำ</option>
+                    <option value="ขีด">ขีด</option>
+                    <option value="ขวด">ขวด</option>
+                    <option value="ชิ้น">ชิ้น</option>
+                    <option value="ช้อนชา">ช้อนชา</option>
+                    <option value="ช้อนโต๊ะ">ช้อนโต๊ะ</option>
+                    <option value="ตัว">ตัว</option>
+                    <option value="ถ้วย">ถ้วย</option>
+                    <option value="ถุง">ถุง</option>
+                    <option value="มัด">มัด</option>
+                    <option value="มิลลิลิตร">มิลลิลิตร</option>
+                    <option value="เม็ด">เม็ด</option>
+                    <option value="ลูก">ลูก</option>
+                    <option value="เล็กน้อย">เล็กน้อย</option>
+                    <option value="หยด">หยด</option>
+                    <option value="หยิบมือ">หยิบมือ</option>
+                    <option value="ห่อ">ห่อ</option>
+                    <option value="หัว">หัว</option>
+                    <option value="แผ่น">แผ่น</option>
+                    <option value="แพ็ค">แพ็ค</option>
+                    <option value="พวง">พวง</option>
+                    <option value="ฟอง">ฟอง</option>
+                  </select>
 
                   {ingredients.length > 1 && (
                     <button
@@ -449,7 +462,7 @@ const MyRecipePage = () => {
                 <button
                   type="button"
                   className="btn btn-outline btn-sm"
-                  onClick={() => setSteps([...steps, ""]) }
+                  onClick={() => setSteps([...steps, ""])}
                 >
                   + เพิ่มขั้นตอน
                 </button>
@@ -471,14 +484,14 @@ const MyRecipePage = () => {
                 <legend className="text-gray-800 text-base font-bold">
                   <span>เลือกแท็ก (สูงสุด 5 อัน)    </span>
                   <button
-                type="button"
-                onClick={handleTagSuggestion}
-                className="btn btn-outline btn-sm btn-info"
-              >
-                🔍 แนะนำแท็ก
-              </button>
+                    type="button"
+                    onClick={handleTagSuggestion}
+                    className="btn btn-outline btn-sm btn-info"
+                  >
+                    🔍 แนะนำแท็ก
+                  </button>
                 </legend>
-                
+
                 <input
                   type="text"
                   placeholder="ค้นหาแท็ก..."
@@ -509,11 +522,10 @@ const MyRecipePage = () => {
                             alert("เลือกแท็กได้สูงสุด 5 อัน");
                           }
                         }}
-                        className={`px-3 py-1 border rounded-full cursor-pointer ${
-                          form.tags.includes(t.tag_id)
-                            ? "bg-green-200 border-green-500"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        }`}
+                        className={`px-3 py-1 border rounded-full cursor-pointer ${form.tags.includes(t.tag_id)
+                          ? "bg-green-200 border-green-500"
+                          : "bg-gray-100 hover:bg-gray-200"
+                          }`}
                       >
                         {t.tag_name}
                       </div>
@@ -561,7 +573,7 @@ const MyRecipePage = () => {
               <div className="relative">
                 {r.image ? (
                   <img
-                    src={`${API.endsWith('/') ? API.slice(0,-1) : API}/api/images/${r.image}`}
+                    src={`${API.endsWith('/') ? API.slice(0, -1) : API}/api/images/${r.image}`}
                     alt={r.title}
                     className="w-full h-48 object-cover"
                   />
@@ -571,11 +583,10 @@ const MyRecipePage = () => {
                   </div>
                 )}
                 <span
-                  className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full shadow ${
-                    r.staring_status
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-500 text-white"
-                  }`}
+                  className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full shadow ${r.staring_status
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-500 text-white"
+                    }`}
                 >
                   {r.staring_status ? "สาธารณะ" : "ส่วนตัว"}
                 </span>
@@ -587,17 +598,14 @@ const MyRecipePage = () => {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {r.tags && r.tags.length > 0 ? (
-                    r.tags.map((id) => {
-                      const tag = tags.find((t) => t.tag_id === id);
-                      return (
-                        <span
-                          key={id}
-                          className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded-full"
-                        >
-                          {tag ? tag.tag_name : id}
-                        </span>
-                      );
-                    })
+                    getSortedTagList(tags, r.tags).map((tg) => (
+                      <span
+                        key={tg.id}
+                        className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded-full"
+                      >
+                        {tg.name}
+                      </span>
+                    ))
                   ) : (
                     <span className="text-gray-400 text-sm">ไม่มีแท็ก</span>
                   )}
@@ -607,11 +615,11 @@ const MyRecipePage = () => {
                   <strong>ส่วนผสม:</strong>{" "}
                   {Array.isArray(r.ingredients)
                     ? r.ingredients
-                        .map(
-                          (i) =>
-                            `${i.name} ${i.quantity}${i.unit ? " " + i.unit : ""}`
-                        )
-                        .join(", ")
+                      .map(
+                        (i) =>
+                          `${i.name} ${i.quantity}${i.unit ? " " + i.unit : ""}`
+                      )
+                      .join(", ")
                     : r.ingredients}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
@@ -638,50 +646,50 @@ const MyRecipePage = () => {
         )}
       </div>
       {showSuggestionModal && (
-  <dialog open className="modal modal-open">
-    <div className="modal-box">
-      <h3 className="font-bold text-lg mb-3">🎯 แท็กที่ระบบแนะนำ</h3>
-      <p className="mb-2">ระบบตรวจพบแท็กที่เกี่ยวข้องกับชื่อสูตร:</p>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {suggestedTags.map((t) => (
-          <span
-            key={t.tag_id}
-            className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
-          >
-            {t.tag_name}
-          </span>
-        ))}
-      </div>
-      <div className="modal-action">
-        <button
-          className="btn btn-success"
-          onClick={() => {
-            const newIds = suggestedTags
-              .map((t) => t.tag_id)
-              .filter((id) => !form.tags.includes(id));
-            setForm((prev) => ({
-              ...prev,
-              tags: [...prev.tags, ...newIds].slice(0, 5),
-            }));
-            setShowSuggestionModal(false);
-            setSuggestedTags([]);
-          }}
-        >
-          ✅ ใช้แท็กเหล่านี้
-        </button>
-        <button
-          className="btn"
-          onClick={() => {
-            setShowSuggestionModal(false);
-            setSuggestedTags([]);
-          }}
-        >
-          ❌ ยกเลิก
-        </button>
-      </div>
-    </div>
-  </dialog>
-)}
+        <dialog open className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-3">🎯 แท็กที่ระบบแนะนำ</h3>
+            <p className="mb-2">ระบบตรวจพบแท็กที่เกี่ยวข้องกับชื่อสูตร:</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {suggestedTags.map((t) => (
+                <span
+                  key={t.tag_id}
+                  className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
+                >
+                  {t.tag_name}
+                </span>
+              ))}
+            </div>
+            <div className="modal-action">
+              <button
+                className="btn btn-success"
+                onClick={() => {
+                  const newIds = suggestedTags
+                    .map((t) => t.tag_id)
+                    .filter((id) => !form.tags.includes(id));
+                  setForm((prev) => ({
+                    ...prev,
+                    tags: [...prev.tags, ...newIds].slice(0, 5),
+                  }));
+                  setShowSuggestionModal(false);
+                  setSuggestedTags([]);
+                }}
+              >
+                ✅ ใช้แท็กเหล่านี้
+              </button>
+              <button
+                className="btn"
+                onClick={() => {
+                  setShowSuggestionModal(false);
+                  setSuggestedTags([]);
+                }}
+              >
+                ❌ ยกเลิก
+              </button>
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 };

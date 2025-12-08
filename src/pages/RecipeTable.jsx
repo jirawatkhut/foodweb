@@ -24,11 +24,12 @@ const RecipeTable = () => {
   const [image, setImage] = useState(null);
   const [editId, setEditId] = useState(null);
   const [tagSearch, setTagSearch] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("latest"); // 'latest' | 'alpha'
 
   const [suggestedTags, setSuggestedTags] = useState([]);
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
-   const [status, setStatus] = useState("idle"); // "idle" | "loading"
+  const [status, setStatus] = useState("idle"); // "idle" | "loading"
 
   useEffect(() => {
     if (!token || role !== "1") {
@@ -64,23 +65,23 @@ const RecipeTable = () => {
   };
 
   const handleTagSuggestion = () => {
-  if (!form.title) {
-    alert("กรุณากรอกชื่อสูตรก่อน");
-    return;
-  }
+    if (!form.title) {
+      alert("กรุณากรอกชื่อสูตรก่อน");
+      return;
+    }
 
-  const normalizedTitle = form.title.toLowerCase();
-  const matchedTags = tags.filter((t) =>
-    normalizedTitle.includes(t.tag_name.toLowerCase())
-  );
+    const normalizedTitle = form.title.toLowerCase();
+    const matchedTags = tags.filter((t) =>
+      normalizedTitle.includes(t.tag_name.toLowerCase())
+    );
 
-  if (matchedTags.length > 0) {
-    setSuggestedTags(matchedTags);
-    setShowSuggestionModal(true);
-  } else {
-    alert("ไม่พบแท็กที่เกี่ยวข้องกับชื่อสูตรนี้");
-  }
-};
+    if (matchedTags.length > 0) {
+      setSuggestedTags(matchedTags);
+      setShowSuggestionModal(true);
+    } else {
+      alert("ไม่พบแท็กที่เกี่ยวข้องกับชื่อสูตรนี้");
+    }
+  };
 
   const handleIngredientChange = (index, field, value) => {
     const newIngredients = [...ingredients];
@@ -100,12 +101,12 @@ const RecipeTable = () => {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });;
   }
-    
+
 
   const handleFile = (e) => setImage(e.target.files[0]);
 
   const handleCancel = () => {
-    setForm({ title: "", instructions: "", tags: [] , staring_status: false });
+    setForm({ title: "", instructions: "", tags: [], staring_status: false });
     setIngredients([{ name: "", quantity: "", unit: "" }]);
     setImage(null);
     setEditId(null);
@@ -156,8 +157,8 @@ const RecipeTable = () => {
           },
         });
       }
-      
-      setForm({ title: "", instructions: "", tags: [] , staring_status: false });
+
+      setForm({ title: "", instructions: "", tags: [], staring_status: false });
       setIngredients([{ name: "", quantity: "", unit: "" }]);
       setImage(null);
       setEditId(null);
@@ -211,6 +212,14 @@ const RecipeTable = () => {
   const filteredRecipes = recipes.filter((u) =>
     u.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Apply sorting to the filtered list before rendering
+  const displayedRecipes = [...filteredRecipes];
+  if (sortBy === "latest") {
+    displayedRecipes.sort((a, b) => new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0));
+  } else if (sortBy === "alpha") {
+    displayedRecipes.sort((a, b) => String(a.title).localeCompare(String(b.title), "th"));
+  }
   return (
     <div className="space-y-6">
       {/* Card 1: Header, Search, and Add Button */}
@@ -236,9 +245,20 @@ const RecipeTable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ padding: "5px", flex: 1 }}
             />
-            <button onClick={() => setShowForm(true)} className="btn btn-outline mb-2">
-              + เพิ่มสูตร
-            </button>
+            <div className="flex items-center gap-3">
+              <label className="whitespace-nowrap">เรียง:</label>
+              <select
+                className="select select-sm select-bordered"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="latest">ล่าสุด</option>
+                <option value="alpha">ตัวอักษร</option>
+              </select>
+              <button onClick={() => setShowForm(true)} className="btn btn-outline mb-2">
+                + เพิ่มสูตร
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -279,44 +299,56 @@ const RecipeTable = () => {
                     required
                   />
                   <input
-                      type="number"
-                      placeholder="จำนวน"
-                      value={ing.unit === "เล็กน้อย" ? "" : ing.quantity}
-                      onChange={(e) =>
-                        handleIngredientChange(index, "quantity", e.target.value)
-                      }
-                      className="input input-bordered w-1/4"
-                      disabled={ing.unit === "เล็กน้อย"} // ❗ ปิดการใช้งานเมื่อเลือกเล็กน้อย
-                      required={ing.unit !== "เล็กน้อย"} // ❗ ไม่บังคับกรอก
-                    />
+                    type="number"
+                    placeholder="จำนวน"
+                    value={ing.unit === "เล็กน้อย" ? "" : ing.quantity}
+                    onChange={(e) =>
+                      handleIngredientChange(index, "quantity", e.target.value)
+                    }
+                    className="input input-bordered w-1/4"
+                    disabled={ing.unit === "เล็กน้อย"} // ❗ ปิดการใช้งานเมื่อเลือกเล็กน้อย
+                    required={ing.unit !== "เล็กน้อย"} // ❗ ไม่บังคับกรอก
+                  />
 
-                    <select
-                      value={ing.unit}
-                      onChange={(e) => {
-                        handleIngredientChange(index, "unit", e.target.value);
-                        // ถ้าเลือก "เล็กน้อย" ให้ล้างค่า quantity
-                        if (e.target.value === "เล็กน้อย") {
-                          handleIngredientChange(index, "quantity", "");
-                        }
-                      }}
-                      className="select select-bordered w-1/4"
-                      required
-                    >
-                      <option value="">-- หน่วย --</option>
-                      <option value="กรัม">กรัม</option>
-                      <option value="ขีด">ขีด</option>
-                      <option value="ช้อนโต๊ะ">ช้อนโต๊ะ</option>
-                      <option value="ช้อนชา">ช้อนชา</option>
-                      <option value="มิลลิลิตร">มิลลิลิตร</option>
-                      <option value="ตัว">ตัว</option>
-                      <option value="ถ้วย">ถ้วย</option>
-                      <option value="ลูก">ลูก</option>
-                      <option value="ชิ้น">ชิ้น</option>
-                      <option value="แพ็ค">แพ็ค</option>
-                      <option value="ขวด">ขวด</option>
-                      <option value="เม็ด">เม็ด</option>
-                      <option value="เล็กน้อย">เล็กน้อย</option> {/* ✅ เพิ่มอันนี้ */}
-                    </select>
+                  <select
+                    value={ing.unit}
+                    onChange={(e) => {
+                      handleIngredientChange(index, "unit", e.target.value);
+                      // ถ้าเลือก "เล็กน้อย" ให้ล้างค่า quantity
+                      if (e.target.value === "เล็กน้อย") {
+                        handleIngredientChange(index, "quantity", "");
+                      }
+                    }}
+                    className="select select-bordered w-1/4"
+                    required
+                  >
+                    <option value="">-- หน่วย --</option>
+                    <option value="กรัม">กรัม</option>
+                    <option value="กระป๋อง">กระป๋อง</option>
+                    <option value="ก้าน">ก้าน</option>
+                    <option value="กำ">กำ</option>
+                    <option value="ขีด">ขีด</option>
+                    <option value="ขวด">ขวด</option>
+                    <option value="ชิ้น">ชิ้น</option>
+                    <option value="ช้อนชา">ช้อนชา</option>
+                    <option value="ช้อนโต๊ะ">ช้อนโต๊ะ</option>
+                    <option value="ตัว">ตัว</option>
+                    <option value="ถ้วย">ถ้วย</option>
+                    <option value="ถุง">ถุง</option>
+                    <option value="มัด">มัด</option>
+                    <option value="มิลลิลิตร">มิลลิลิตร</option>
+                    <option value="เม็ด">เม็ด</option>
+                    <option value="ลูก">ลูก</option>
+                    <option value="เล็กน้อย">เล็กน้อย</option>
+                    <option value="หยด">หยด</option>
+                    <option value="หยิบมือ">หยิบมือ</option>
+                    <option value="ห่อ">ห่อ</option>
+                    <option value="หัว">หัว</option>
+                    <option value="แผ่น">แผ่น</option>
+                    <option value="แพ็ค">แพ็ค</option>
+                    <option value="พวง">พวง</option>
+                    <option value="ฟอง">ฟอง</option>
+                  </select>
 
                   {ingredients.length > 1 && (
                     <button
@@ -371,7 +403,7 @@ const RecipeTable = () => {
                 <button
                   type="button"
                   className="btn btn-outline btn-sm"
-                  onClick={() => setSteps([...steps, ""]) }
+                  onClick={() => setSteps([...steps, ""])}
                 >
                   + เพิ่มขั้นตอน
                 </button>
@@ -393,14 +425,14 @@ const RecipeTable = () => {
                 <legend className="text-gray-800 text-base font-bold">
                   <span>เลือกแท็ก (สูงสุด 5 อัน)    </span>
                   <button
-                type="button"
-                onClick={handleTagSuggestion}
-                className="btn btn-outline btn-sm btn-info"
-              >
-                🔍 แนะนำแท็ก
-              </button>
+                    type="button"
+                    onClick={handleTagSuggestion}
+                    className="btn btn-outline btn-sm btn-info"
+                  >
+                    🔍 แนะนำแท็ก
+                  </button>
                 </legend>
-                
+
                 <input
                   type="text"
                   placeholder="ค้นหาแท็ก..."
@@ -431,11 +463,10 @@ const RecipeTable = () => {
                             alert("เลือกแท็กได้สูงสุด 5 อัน");
                           }
                         }}
-                        className={`px-3 py-1 border rounded-full cursor-pointer ${
-                          form.tags.includes(t.tag_id)
-                            ? "bg-green-200 border-green-500"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        }`}
+                        className={`px-3 py-1 border rounded-full cursor-pointer ${form.tags.includes(t.tag_id)
+                          ? "bg-green-200 border-green-500"
+                          : "bg-gray-100 hover:bg-gray-200"
+                          }`}
                       >
                         {t.tag_name}
                       </div>
@@ -468,53 +499,54 @@ const RecipeTable = () => {
         </div>
       )}
       {showSuggestionModal && (
-  <dialog open className="modal modal-open">
-    <div className="modal-box">
-      <h3 className="font-bold text-lg mb-3">🎯 แท็กที่ระบบแนะนำ</h3>
-      <p className="mb-2">ระบบตรวจพบแท็กที่เกี่ยวข้องกับชื่อสูตร:</p>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {suggestedTags.map((t) => (
-          <span
-            key={t.tag_id}
-            className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
-          >
-            {t.tag_name}
-          </span>
-        ))}
-      </div>
-      <div className="modal-action">
-        <button
-          className="btn btn-success"
-          onClick={() => {
-            const newIds = suggestedTags
-              .map((t) => t.tag_id)
-              .filter((id) => !form.tags.includes(id));
-            setForm((prev) => ({
-              ...prev,
-              tags: [...prev.tags, ...newIds].slice(0, 5),
-            }));
-            setShowSuggestionModal(false);
-            setSuggestedTags([]);
-          }}
-        >
-          ✅ ใช้แท็กเหล่านี้
-        </button>
-        <button
-          className="btn"
-          onClick={() => {
-            setShowSuggestionModal(false);
-            setSuggestedTags([]);
-          }}
-        >
-          ❌ ยกเลิก
-        </button>
-      </div>
-    </div>
-  </dialog>
-)}
+        <dialog open className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-3">🎯 แท็กที่ระบบแนะนำ</h3>
+            <p className="mb-2">ระบบตรวจพบแท็กที่เกี่ยวข้องกับชื่อสูตร:</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {suggestedTags.map((t) => (
+                <span
+                  key={t.tag_id}
+                  className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
+                >
+                  {t.tag_name}
+                </span>
+              ))}
+            </div>
+            <div className="modal-action">
+              <button
+                className="btn btn-success"
+                onClick={() => {
+                  const newIds = suggestedTags
+                    .map((t) => t.tag_id)
+                    .filter((id) => !form.tags.includes(id));
+                  setForm((prev) => ({
+                    ...prev,
+                    tags: [...prev.tags, ...newIds].slice(0, 5),
+                  }));
+                  setShowSuggestionModal(false);
+                  setSuggestedTags([]);
+                }}
+              >
+                ✅ ใช้แท็กเหล่านี้
+              </button>
+              <button
+                className="btn"
+                onClick={() => {
+                  setShowSuggestionModal(false);
+                  setSuggestedTags([]);
+                }}
+              >
+                ❌ ยกเลิก
+              </button>
+            </div>
+          </div>
+        </dialog>
+      )}
       {/* Card 2: Table */}
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
+          <h2 align="right">เรียงตามเวลา</h2>
           {/* ตารางสูตรอาหาร */}
           <div className="h-96 overflow-x-auto">
             <table className="table table-s w-full table-pin-rows rounded-box bg-base-100">
@@ -536,18 +568,18 @@ const RecipeTable = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredRecipes.map((r) => (
+                  displayedRecipes.map((r) => (
                     <tr key={r._id}>
-                      
+
                       <td>{r.title}</td>
                       <td>
                         {r.tags && r.tags.length > 0
                           ? r.tags
-                              .map((id) => {
-                                const tag = tags.find((t) => t.tag_id === id);
-                                return tag ? tag.tag_name : id;
-                              })
-                              .join(", ")
+                            .map((id) => {
+                              const tag = tags.find((t) => t.tag_id === id);
+                              return tag ? tag.tag_name : id;
+                            })
+                            .join(", ")
                           : "-"}
                       </td>
                       <td>{r.created_by_username || r.created_by}</td>
@@ -561,7 +593,7 @@ const RecipeTable = () => {
                       </td>
                       <td>
                         <button onClick={() => handleEdit(r)} className="btn btn-outline btn-sm btn-info">แก้ไข</button>
-                        <button onClick={() => handleDelete(r._id)} className="btn btn-outline btn-sm btn-error ml-2">ลบ</button>
+
                       </td>
                     </tr>
                   ))

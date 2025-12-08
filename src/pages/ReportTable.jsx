@@ -233,7 +233,6 @@ const ReportTable = () => {
                       <td>
                         <button onClick={() => handleEdit(r)} className="btn btn-outline btn-sm btn-info">แก้ไข</button>
                         <> </>
-                        <button onClick={() => handleDelete(r._id)} className="btn btn-outline btn-sm btn-error">ลบ</button>
                       </td>
                     </tr>
                   ))

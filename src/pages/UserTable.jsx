@@ -155,9 +155,6 @@ const UserTable = () => {
                     className="btn btn-outline btn-sm btn-info"
                     >แก้ไข</button>
                   <> </>
-                  <button onClick={() => handleDelete(u)}
-                    className="btn btn-outline btn-sm btn-error"
-                    >ลบ</button>
                 </td>
               </tr>
             ))
