@@ -91,6 +91,11 @@ const ShowRecipeView = () => {
     return matchSearch && matchTag;
   });
 
+  // sort newest first by createdAt (fallback to updatedAt)
+  const sortedRecipes = filteredRecipes.slice().sort((a, b) =>
+    new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0)
+  );
+
   // Group tags by category and sort each group's tag_name alphabetically (Thai-aware, fallback to English)
   const groupedTags = tags.reduce((acc, t) => {
     const key = t.tag_category_id || "other";
@@ -186,10 +191,10 @@ const ShowRecipeView = () => {
 
       {/* 🧁 Recipe Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRecipes.length === 0 ? (
+        {sortedRecipes.length === 0 ? (
           <p className="col-span-full text-center text-gray-500">ไม่พบสูตรอาหาร</p>
         ) : (
-          filteredRecipes.map((r) => (
+          sortedRecipes.map((r) => (
             <div
               key={r._id}
               className="card bg-base-100 shadow-md hover:shadow-xl cursor-pointer transition-all duration-200 relative"
