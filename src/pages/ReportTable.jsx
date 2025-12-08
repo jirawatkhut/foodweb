@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 
 import { AuthContext } from "../context/AuthContext";
 import api from "../context/api.js";
+import { formatThaiDate } from "../utils/dateUtils";
 const ReportTable = () => {
   const { token, role } = useContext(AuthContext);
   const [reports, setReports] = useState([]);
@@ -15,6 +16,7 @@ const ReportTable = () => {
   const [modalReportId, setModalReportId] = useState(null);
 
   const [status, setStatus] = useState("idle"); // "idle" | "loading"
+  const [sortConfig, setSortConfig] = useState({ key: "report_createdAt", direction: "desc" });
 
   // ✅ หมวดหมู่แบบ fixed
   const categories = [
@@ -70,7 +72,8 @@ const ReportTable = () => {
       const res = await api.get("/api/reports", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setReports(res.data);
+      const sorted = (res.data || []).slice().sort((a,b) => new Date(b.report_createdAt) - new Date(a.report_createdAt));
+      setReports(sorted);
       setStatus("idle");
     } catch (err) {
       console.error("Error fetching reports:", err.response?.data || err.message);
@@ -135,6 +138,16 @@ const ReportTable = () => {
     ? reports.filter((r) => r.report_category === filterCategory)
     : reports;
 
+  const displayedReports = filteredReports.slice().sort((a,b) => {
+    const key = sortConfig.key;
+    const dir = sortConfig.direction === "asc" ? 1 : -1;
+    if (key === "report_createdAt") return dir * (new Date(b.report_createdAt) - new Date(a.report_createdAt));
+    if (key === "report_name") return dir * String(a.report_name).localeCompare(String(b.report_name), "th");
+    return 0;
+  });
+
+  const handleSort = (key) => setSortConfig((prev) => ({ key, direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc" }));
+
   return (
     <div className="space-y-6">
       {/* Card 1: Filters */}
@@ -179,38 +192,32 @@ const ReportTable = () => {
             <table className="table table-s w-full table-pin-rows rounded-box bg-base-100">
               <thead>
                 <tr className="bg-pink-100 text-primary-content rounded-t-lg ">
-                  <th className="first:rounded-tl-lg">หมวดหมู่</th>
-                  <th>หัวข้อ</th>
+                  <th className="first:rounded-tl-lg" onClick={() => handleSort('report_category')} style={{ cursor: 'pointer' }}>หมวดหมู่</th>
+                  <th onClick={() => handleSort('report_name')} style={{ cursor: 'pointer' }}>หัวข้อ</th>
                   <th>รายละเอียด</th>
-                  <th>ผู้เเจ้ง</th>
-                  <th>วันที่แจ้ง</th>
+                  <th>ผู้เแจ้ง</th>
+                  <th onClick={() => handleSort('report_createdAt')} style={{ cursor: 'pointer' }}>วันที่แจ้ง</th>
                   <th>สถานะ</th>
                   <th>Logs</th>
                   <th className="last:rounded-tr-lg">จัดการ</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredReports.length === 0 ? (
+                {displayedReports.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="text-center py-4">
                       ไม่พบข้อมูล
                     </td>
                   </tr>
                 ) : (
-                  filteredReports.map((r) => (
+                  displayedReports.map((r) => (
                     <tr key={r._id}>
                       <td>{r.report_category}</td>
                       <td>{r.report_name}</td>
                       <td>{r.report_detail}</td>
                       <td>{r.created_by_username || r.created_by}</td>
                       <td className="whitespace-nowrap">
-                        {new Date(r.report_createdAt).toLocaleString(
-                          "th-TH",
-                          {
-                            dateStyle: "medium",
-                            timeStyle: "short"
-                          }
-                        )}
+                        {formatThaiDate(r.report_createdAt, true)}
                       </td>
                       <td>
                         {r.report_status === 1 ? (

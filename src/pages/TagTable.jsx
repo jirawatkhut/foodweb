@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 
 import { AuthContext } from "../context/AuthContext";
 import api from "../context/api.js";
+import { formatThaiDate } from "../utils/dateUtils";
 const TagTable = () => {
   const { token, role } = useContext(AuthContext);
   const [tags, setTags] = useState([]);
@@ -11,6 +12,7 @@ const TagTable = () => {
   const [searchCategory, setSearchCategory] = useState(""); // ✅ search หมวดหมู่
 
   const [status, setStatus] = useState("idle"); // "idle" | "loading"
+  const [sortConfig, setSortConfig] = useState({ key: "tag_created_datetime", direction: "desc" });
 
   const categories = [
     { _id: "material", name: "วัตถุดิบ" },
@@ -33,7 +35,8 @@ const TagTable = () => {
       const res = await api.get("/api/tag/all", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTags(res.data);
+      const sorted = (res.data || []).slice().sort((a, b) => new Date(b.tag_created_datetime) - new Date(a.tag_created_datetime));
+      setTags(sorted);
       setStatus("idle");
     } catch (err) {
       console.error("Error fetching tags:", err.response?.data || err.message);
@@ -93,6 +96,18 @@ const TagTable = () => {
     return matchName && matchCategory;
   });
 
+  const displayedTags = filteredTags.slice().sort((a, b) => {
+    const key = sortConfig.key;
+    const dir = sortConfig.direction === "asc" ? 1 : -1;
+    if (key === "tag_name") return dir * String(a.tag_name).localeCompare(String(b.tag_name), "th");
+    if (key === "tag_created_datetime") return dir * (new Date(b.tag_created_datetime) - new Date(a.tag_created_datetime));
+    return 0;
+  });
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => ({ key, direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc" }));
+  };
+
   return (
     <div className="space-y-6">
       {/* Card 1: Filters */}
@@ -148,8 +163,8 @@ const TagTable = () => {
             <thead>
               <tr className="bg-gray-200 text-primary-content rounded-t-lg ">
                 <th className="first:rounded-tl-lg">หมวดหมู่</th>
-                <th>ชื่อแท็ก</th>
-                <th>วันที่สร้าง</th>
+                <th onClick={() => handleSort("tag_name")} style={{ cursor: "pointer" }}>ชื่อแท็ก</th>
+                <th onClick={() => handleSort("tag_created_datetime")} style={{ cursor: "pointer" }}>วันที่สร้าง</th>
                 <th>สถานะ</th>
                 <th className="last:rounded-tr-lg">จัดการ</th>
               </tr>
@@ -162,7 +177,7 @@ const TagTable = () => {
                   </td>
                 </tr>
               ) : (
-                filteredTags.map((t) => (
+                displayedTags.map((t) => (
                   <tr key={t._id}>
                     
                     <td>
@@ -170,17 +185,9 @@ const TagTable = () => {
                         ?.name || "-"}
                     </td>
                     <td>{t.tag_name}</td>
+                    <td>{formatThaiDate(t.tag_created_datetime, true)}</td>
                     <td>
-                      {new Date(t.tag_created_datetime).toLocaleString(
-                        "th-TH",
-                        {
-                          dateStyle: "medium",
-                          timeStyle: "short"
-                        }
-                      )}
-                    </td>
-                    <td>
-                      {t.tag_status === "1" ? (
+                      {String(t.tag_status) === "1" ? (
                         <span className="badge badge-success text-white">Active</span>
                       ) : (
                         <span className="badge badge-ghost">Inactive</span>
@@ -223,14 +230,10 @@ const TagTable = () => {
               onChange={(e) => setForm({ ...form, tag_name: e.target.value })}
             />
             <h3>สถานะของแท็ก :</h3>
-            <select
-              className="select w-full border border-gray-300 rounded px-2 py-1 mb-2"
-              value={form.tag_status}
-              onChange={(e) => setForm({ ...form, tag_status: Number(e.target.value) })}
-            >
-              <option value={"1"}>Active</option>
-              <option value={"0"}>Inactive</option>
-            </select>
+            <div className="flex items-center gap-4 mb-2">
+              <label className="flex items-center gap-2"><input type="radio" name="tag_status" value={1} checked={String(form.tag_status) === "1"} onChange={() => setForm({ ...form, tag_status: 1 })} /> Active</label>
+              <label className="flex items-center gap-2"><input type="radio" name="tag_status" value={0} checked={String(form.tag_status) === "0"} onChange={() => setForm({ ...form, tag_status: 0 })} /> Inactive</label>
+            </div>
             <h3>หมวดหมู่ของแท็ก :</h3>
             <select
               className="select w-full border border-gray-300 rounded px-2 py-1 mb-2"

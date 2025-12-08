@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import api from "../context/api.js";
+import { formatThaiDate } from "../utils/dateUtils";
 const CommentSection = ({ recipeId }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
@@ -11,7 +12,8 @@ const CommentSection = ({ recipeId }) => {
     const fetchComments = async () => {
         try {
             const response = await api.get(`/api/comments/${recipeId}`);
-            setComments(response.data);
+                const sorted = (response.data || []).slice().sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setComments(sorted);
         } catch (error) {
             console.error('Error fetching comments:', error);
         }
@@ -61,16 +63,7 @@ const CommentSection = ({ recipeId }) => {
     };
 
     // Format date
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleString('th-TH', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+    const formatDate = (dateString) => formatThaiDate(dateString, true);
 
     return (
         <div className="mt-6">
