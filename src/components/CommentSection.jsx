@@ -92,27 +92,29 @@ const CommentSection = ({ recipeId }) => {
             )}
 
             <div className="space-y-4">
-                {comments.map((comment) => (
-                    <div key={comment._id} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="font-semibold">{comment.user.username}</p>
-                                <p className="text-gray-600 text-sm">
-                                    {formatThaiDateTime(comment.createdAt)}
-                                </p>
-                                <p className="mt-2">{comment.content}</p>
+                    {comments.map((comment) => (
+                        <div key={comment._id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                            <div className="flex justify-between items-start gap-4">
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <p className="font-semibold text-gray-800">{comment.user.username}</p>
+                                        <p className="text-gray-500 text-sm ml-2">{formatThaiDateTime(comment.createdAt)}</p>
+                                    </div>
+                                    <div className="mt-3 text-gray-700 whitespace-pre-wrap">{comment.content}</div>
+                                </div>
+                                {user && user._id === comment.user._id && (
+                                    <div className="ml-4 self-start">
+                                        <button
+                                            onClick={() => handleDeleteComment(comment._id)}
+                                            className="text-red-500 hover:text-red-700 text-sm"
+                                        >
+                                            ลบ
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                            {user && user._id === comment.user._id && (
-                                <button
-                                    onClick={() => handleDeleteComment(comment._id)}
-                                    className="text-red-500 hover:text-red-700"
-                                >
-                                    ลบ
-                                </button>
-                            )}
                         </div>
-                    </div>
-                ))}
+                    ))}
             </div>
         </div>
     );
