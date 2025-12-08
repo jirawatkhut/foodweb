@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 
 import { AuthContext } from "../context/AuthContext";
 import api from "../context/api.js";
+import { formatThaiDateTime } from "../utils/formatDate";
 const ReportTable = () => {
   const { token, role } = useContext(AuthContext);
   const [reports, setReports] = useState([]);
@@ -203,15 +204,7 @@ const ReportTable = () => {
                       <td>{r.report_name}</td>
                       <td>{r.report_detail}</td>
                       <td>{r.created_by_username || r.created_by}</td>
-                      <td className="whitespace-nowrap">
-                        {new Date(r.report_createdAt).toLocaleString(
-                          "th-TH",
-                          {
-                            dateStyle: "medium",
-                            timeStyle: "short"
-                          }
-                        )}
-                      </td>
+                      <td className="whitespace-nowrap">{formatThaiDateTime(r.report_createdAt)}</td>
                       <td>
                         {r.report_status === 1 ? (
                           <span className="badge badge-success text-white text-xs">แก้แล้ว</span>
@@ -267,7 +260,7 @@ const ReportTable = () => {
               <p><span className="font-bold">Report ID:</span> {form.report_id || "-"}</p>
               <p><span className="font-bold">หัวข้อ:</span> {form.report_name || "-"}</p>
               <p><span className="font-bold">ผู้แจ้ง:</span> {form.created_by_username || "-"}</p>
-              <p><span className="font-bold">วันที่แจ้ง:</span> {form.report_createdAt ? new Date(form.report_createdAt).toLocaleString("th-TH") : "-"}</p>
+              <p><span className="font-bold">วันที่แจ้ง:</span> {form.report_createdAt ? formatThaiDateTime(form.report_createdAt) : "-"}</p>
             </div>
 
             {/* หมวดหมู่ */}
@@ -360,7 +353,7 @@ const ReportTable = () => {
                     ) : (
                       modalLogs.map((l) => (
                         <tr key={l._id}>
-                          <td style={{ whiteSpace: "nowrap" }}>{new Date(l.timestamp).toLocaleString("th-TH")}</td>
+                          <td style={{ whiteSpace: "nowrap" }}>{formatThaiDateTime(l.timestamp)}</td>
                           <td>{l.action}</td>
                           <td>{l.performed_by_username || l.performed_by}</td>
                           <td style={{ maxWidth: 500 }}>

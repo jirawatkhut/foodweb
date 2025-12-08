@@ -1,4 +1,5 @@
-import { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { formatThaiDateTime } from "../utils/formatDate";
 
 import { AuthContext } from "../context/AuthContext";
 import api from "../context/api.js";
@@ -136,7 +137,7 @@ const Report = () => {
                 <td>{r.report_category}</td>
                 <td className="font-medium">{r.report_name}</td>
                 <td>{r.created_by_username || r.created_by}</td>
-                <td>{new Date(r.report_createdAt).toLocaleDateString("th-TH")}</td>
+                <td>{formatThaiDateTime(r.report_createdAt)}</td>
                 <td>{r.report_status === 1 ? "แก้แล้ว" : "รอดำเนินการ"}</td> 
               </tr>
             ))

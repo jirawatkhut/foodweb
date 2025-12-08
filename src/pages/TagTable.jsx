@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 
 import { AuthContext } from "../context/AuthContext";
 import api from "../context/api.js";
+import { formatThaiDateTime } from "../utils/formatDate";
 const TagTable = () => {
   const { token, role } = useContext(AuthContext);
   const [tags, setTags] = useState([]);
@@ -170,15 +171,7 @@ const TagTable = () => {
                         ?.name || "-"}
                     </td>
                     <td>{t.tag_name}</td>
-                    <td>
-                      {new Date(t.tag_created_datetime).toLocaleString(
-                        "th-TH",
-                        {
-                          dateStyle: "medium",
-                          timeStyle: "short"
-                        }
-                      )}
-                    </td>
+                    <td>{formatThaiDateTime(t.tag_created_datetime)}</td>
                     <td>
                       {t.tag_status === "1" ? (
                         <span className="badge badge-success text-white">Active</span>

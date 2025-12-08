@@ -3,6 +3,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
+import { formatThaiDateTime } from "../utils/formatDate";
 import { API } from "../context/api.js";
 
 const Star = ({ filled, onClick }) => (
@@ -304,7 +305,7 @@ const deleteRating = async (ratingId) => {
               <span className="mx-2">|</span>
               <span>
                 📅 วันที่เผยแพร่:{" "}
-                {new Date(recipe.createdAt).toLocaleDateString("th-TH")}
+                {formatThaiDateTime(recipe.createdAt)}
               </span>
             </div>
 
@@ -430,7 +431,7 @@ const deleteRating = async (ratingId) => {
                           </div>
                         </div>
                         <p className="mt-1">{r.comment}</p>
-                        <p className="text-xs text-gray-400 mt-2">{new Date(r.createdAt).toLocaleString("th-TH")}</p>
+                        <p className="text-xs text-gray-400 mt-2">{formatThaiDateTime(r.createdAt)}</p>
                       </div>
 
                       {String(r.user_id) === String(user_id) && (

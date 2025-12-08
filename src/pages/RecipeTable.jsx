@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { formatThaiDateTime } from "../utils/formatDate";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -550,10 +551,7 @@ const RecipeTable = () => {
                           : "-"}
                       </td>
                       <td>{r.created_by_username || r.created_by}</td>
-                      <td>{new Date(r.createdAt).toLocaleString("th-TH", {
-                        dateStyle: "medium",
-                        timeStyle: "short"
-                      })}</td>
+                      <td>{formatThaiDateTime(r.createdAt)}</td>
                       <td>
                         {r.staring_status ? (
                           <span className="badge badge-success text-white">สาธารณะ</span>

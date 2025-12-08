@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import api from "../context/api.js";
+import { formatThaiDateTime } from "../utils/formatDate";
 const CommentSection = ({ recipeId }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
@@ -60,17 +61,7 @@ const CommentSection = ({ recipeId }) => {
         }
     };
 
-    // Format date
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleString('th-TH', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+    // dates formatted with formatThaiDateTime
 
     return (
         <div className="mt-6">
@@ -107,7 +98,7 @@ const CommentSection = ({ recipeId }) => {
                             <div>
                                 <p className="font-semibold">{comment.user.username}</p>
                                 <p className="text-gray-600 text-sm">
-                                    {formatDate(comment.createdAt)}
+                                    {formatThaiDateTime(comment.createdAt)}
                                 </p>
                                 <p className="mt-2">{comment.content}</p>
                             </div>
