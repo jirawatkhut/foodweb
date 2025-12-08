@@ -426,11 +426,6 @@ const RecipeDetailPage = () => {
                   >
                     <div className="w-full">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="avatar placeholder">
-                          <div className="bg-neutral text-neutral-content rounded-full w-8">
-                            <span className="text-xs">{r.username ? r.username.charAt(0).toUpperCase() : "U"}</span>
-                          </div>
-                        </div>
                         <div>
                           <p className="font-bold text-sm">
                             {r.username || `user#${r.user_id.slice(-4)}`}
