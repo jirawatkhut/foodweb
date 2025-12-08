@@ -361,7 +361,7 @@ const deleteRating = async (ratingId) => {
           <div className="card-body p-4 md:p-8">
             <h3 className="font-bold text-xl mb-4">⭐ ให้คะแนนและแสดงความคิดเห็น</h3>
             {token ? (
-              <div className="mt-4 p-4 bg-base-200 rounded-lg">
+              <div className="mt-4 bg-white rounded-lg shadow-md p-4">
                 <label className="block font-medium mb-2">
                   {editingRating ? "แก้ไขความคิดเห็น" : userHasRated ? "คะแนนของคุณ" : "ให้คะแนนสูตรนี้"}
                 </label>
@@ -407,8 +407,7 @@ const deleteRating = async (ratingId) => {
             ) : (
               <p>กรุณา <a href="/login" className="link">เข้าสู่ระบบ</a> เพื่อให้คะแนนและแสดงความคิดเห็น</p>
             )}
-
-            <div className="mt-8">
+            <div className="mt-8 bg-white rounded-lg shadow-md p-4">
               <h4 className="font-bold text-lg mb-4">💬 ความคิดเห็นทั้งหมด ({ratings.length})</h4>
               {ratings.length === 0 ? (
                 <p className="text-gray-500">ยังไม่มีความคิดเห็นสำหรับสูตรนี้</p>
@@ -417,7 +416,7 @@ const deleteRating = async (ratingId) => {
                   {ratings.map((r) => (
                     <div
                       key={r._id}
-                      className="p-4 rounded-lg bg-base-200 flex justify-between items-start"
+                      className="bg-gray-100 p-4 rounded-md flex justify-between items-start"
                     >
                       <div>
                         <div className="flex items-center gap-2">
