@@ -337,7 +337,7 @@ const RecipeDetailPage = () => {
         {/* =======================================================
             SECTION 1: ส่วนให้คะแนนของผู้ใช้ (User Rating Input)
            ======================================================= */}
-        <div id="rating-input-section" className="card bg-base-100 shadow-xl border-t-4 border-yellow-400">
+        <div id="rating-input-section" className="card bg-base-100 shadow-xl border-t-4 border-gray-100">
           <div className="card-body p-4 md:p-8">
             <h3 className="font-bold text-xl mb-4">⭐ ให้คะแนนและแสดงความคิดเห็นของคุณ</h3>
             {token ? (
@@ -405,7 +405,7 @@ const RecipeDetailPage = () => {
         {/* =======================================================
             SECTION 2: ส่วนแสดงความคิดเห็นทั้งหมด (All Comments List)
            ======================================================= */}
-        <div className="card bg-base-100 shadow-xl border-t-4 border-blue-400">
+        <div className="card bg-base-100 shadow-xl border-t-4 border-gray-100">
           <div className="card-body p-4 md:p-8">
             <h4 className="font-bold text-xl mb-6 flex items-center gap-2">
               💬 ความคิดเห็นทั้งหมด 
