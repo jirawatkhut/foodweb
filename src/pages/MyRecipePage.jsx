@@ -298,6 +298,11 @@ const MyRecipePage = () => {
     r.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // sort newest first by createdAt (fallback to updatedAt)
+  const sortedRecipes = filteredRecipes.slice().sort((a, b) =>
+    new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0)
+  );
+
   return (
     <div className="min-h-screen ">
       <h2 className="text-3xl font-bold mb-6 text-center">คลังสูตรอาหารของฉัน 🍳</h2>
@@ -560,12 +565,12 @@ const MyRecipePage = () => {
 
       {/* แสดงสูตรเป็น Card */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {filteredRecipes.length === 0 ? (
+        {sortedRecipes.length === 0 ? (
           <p className="col-span-full text-center text-gray-500">
             ไม่พบสูตรอาหาร
           </p>
         ) : (
-          filteredRecipes.map((r) => (
+          sortedRecipes.map((r) => (
             <div
               key={r._id}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-200"
