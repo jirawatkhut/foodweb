@@ -263,25 +263,6 @@ const RecipeTable = () => {
               style={{ padding: "5px", flex: 1 }}
             />
             <div className="flex items-center gap-3">
-              <label className="whitespace-nowrap">เรียง:</label>
-              <select
-                className="select select-sm select-bordered"
-                value={sortBy}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setSortBy(v);
-                  if (v === "latest") {
-                    setSortField("createdAt");
-                    setSortDir("desc");
-                  } else if (v === "alpha") {
-                    setSortField("title");
-                    setSortDir("asc");
-                  }
-                }}
-              >
-                <option value="latest">ล่าสุด</option>
-                <option value="alpha">ตัวอักษร</option>
-              </select>
               <button onClick={() => setShowForm(true)} className="btn btn-outline mb-2">
                 + เพิ่มสูตร
               </button>
@@ -573,7 +554,6 @@ const RecipeTable = () => {
       {/* Card 2: Table */}
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 align="right">เรียงตามเวลา</h2>
           {/* ตารางสูตรอาหาร */}
           <div className="h-96 overflow-x-auto">
             <table className="table table-s w-full table-pin-rows rounded-box bg-base-100">
