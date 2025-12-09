@@ -11,6 +11,8 @@ const UserTable = () => {
   const [searchTerm, setSearchTerm] = useState(""); // ✅ state สำหรับค้นหา
 
   const [status, setStatus] = useState("idle"); // "idle" | "loading"
+  const [sortField, setSortField] = useState("username");
+  const [sortDir, setSortDir] = useState("asc");
 
   useEffect(() => {
     if (role === "1") {
@@ -89,6 +91,16 @@ const UserTable = () => {
     u.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // sorting
+  const sortedUsers = [...filteredUsers];
+  const compare = (a, b) => {
+    if (sortField === "username") return String(a.username || "").localeCompare(String(b.username || ""), "th");
+    if (sortField === "role") return String(a.role || "").localeCompare(String(b.role || ""));
+    if (sortField === "status") return String(a.status || "").localeCompare(String(b.status || ""));
+    return 0;
+  };
+  sortedUsers.sort((a, b) => (sortDir === "asc" ? compare(a, b) : -compare(a, b)));
+
   return (
     <div className="space-y-6">
       {/* Card 1: Filters */}
@@ -125,21 +137,33 @@ const UserTable = () => {
             <table className="table table-s w-full table-pin-rows rounded-box bg-base-100">
         <thead>
           <tr className="bg-green-100 text-primary-content rounded-t-lg ">
-            <th className="first:rounded-tl-lg">ชื่อผู้ใช้</th>
-            <th>ประเภทของผู้ใช้งาน</th>
-            <th>สถานะ</th>
+            <th className="first:rounded-tl-lg">
+              <button className="w-full text-left" onClick={() => { if (sortField === 'username') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('username'); setSortDir('asc'); } }}>
+                ชื่อผู้ใช้ {sortField === 'username' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+            </th>
+            <th>
+              <button className="w-full text-left" onClick={() => { if (sortField === 'role') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('role'); setSortDir('asc'); } }}>
+                ประเภทของผู้ใช้งาน {sortField === 'role' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+            </th>
+            <th>
+              <button className="w-full text-left" onClick={() => { if (sortField === 'status') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('status'); setSortDir('asc'); } }}>
+                สถานะ {sortField === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+            </th>
             <th className="last:rounded-tr-lg">จัดการ</th>
           </tr>
         </thead>
         <tbody>
-          {filteredUsers.length === 0 ? (
+          {sortedUsers.length === 0 ? (
             <tr>
-              <td colSpan="9" style={{ textAlign: "center" }}>
+              <td colSpan="4" style={{ textAlign: "center" }}>
                 ไม่พบผู้ใช้
               </td>
             </tr>
           ) : (
-            filteredUsers.map((u) => (
+            sortedUsers.map((u) => (
               <tr key={u._id}>
                 <td>{u.username}</td>
                 <td>{u.role === "1" ? "Admin" : "Member"}</td>

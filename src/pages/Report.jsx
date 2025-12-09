@@ -11,6 +11,8 @@ const Report = () => {
   const [filterCategory, setFilterCategory] = useState("");
 
   const [status, setStatus] = useState("idle"); // "idle" | "loading"
+  const [sortField, setSortField] = useState("report_createdAt");
+  const [sortDir, setSortDir] = useState("desc"); // 'asc' | 'desc'
 
   // ✅ หมวดหมู่แบบ fixed
   const categories = [
@@ -79,6 +81,27 @@ const Report = () => {
     ? reports.filter((r) => r.report_category === filterCategory)
     : reports;
 
+  // apply sorting
+  const sortedReports = [...filteredReports];
+  const compare = (a, b) => {
+    if (sortField === "report_createdAt") {
+      const da = a.report_createdAt ? new Date(a.report_createdAt).getTime() : 0;
+      const db = b.report_createdAt ? new Date(b.report_createdAt).getTime() : 0;
+      return da - db;
+    }
+    if (sortField === "report_name") {
+      return String(a.report_name || "").localeCompare(String(b.report_name || ""), "th");
+    }
+    if (sortField === "report_category") {
+      return String(a.report_category || "").localeCompare(String(b.report_category || ""), "th");
+    }
+    if (sortField === "report_status") {
+      return String(a.report_status || "").localeCompare(String(b.report_status || ""));
+    }
+    return 0;
+  };
+  sortedReports.sort((a, b) => (sortDir === "asc" ? compare(a, b) : -compare(a, b)));
+
   return (
     
     <div className="rounded">
@@ -116,23 +139,39 @@ const Report = () => {
       {/* ตาราง */}
       <table className="table table-s w-full rounded-box bg-base-100" >
         <thead >
-          <tr>        
-            <th>หมวดหมู่</th>
-            <th>หัวข้อ</th>
+          <tr>
+            <th>
+              <button className="w-full text-left" onClick={() => { if (sortField === 'report_category') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('report_category'); setSortDir('asc'); } }}>
+                หมวดหมู่ {sortField === 'report_category' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+            </th>
+            <th>
+              <button className="w-full text-left" onClick={() => { if (sortField === 'report_name') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('report_name'); setSortDir('asc'); } }}>
+                หัวข้อ {sortField === 'report_name' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+            </th>
             <th>ผู้เเจ้ง</th>
-            <th>วันที่แจ้ง</th>
-            <th>สถานะ</th>
+            <th>
+              <button className="w-full text-left" onClick={() => { if (sortField === 'report_createdAt') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('report_createdAt'); setSortDir('desc'); } }}>
+                วันที่แจ้ง {sortField === 'report_createdAt' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+            </th>
+            <th>
+              <button className="w-full text-left" onClick={() => { if (sortField === 'report_status') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('report_status'); setSortDir('asc'); } }}>
+                สถานะ {sortField === 'report_status' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-600">
-          {filteredReports.length === 0 ? (
+          {sortedReports.length === 0 ? (
             <tr>
-              <td colSpan="7" className="text-center py-4">
+              <td colSpan="5" className="text-center py-4">
                 ไม่พบข้อมูล
               </td>
             </tr>
           ) : (
-            filteredReports.map((r) => (
+            sortedReports.map((r) => (
               <tr key={r._id}>
                 <td>{r.report_category}</td>
                 <td className="font-medium">{r.report_name}</td>
@@ -145,7 +184,7 @@ const Report = () => {
         </tbody>
       </table>
       <div className="mt-2 text-sm text-right">
-       จำนวนทั้งหมด: {filteredReports.length} รายการ
+       จำนวนทั้งหมด: {sortedReports.length} รายการ
       </div>
 
       {/* Modal Add/Edit */}

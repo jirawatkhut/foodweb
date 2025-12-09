@@ -12,6 +12,8 @@ const TagTable = () => {
   const [searchCategory, setSearchCategory] = useState(""); // ✅ search หมวดหมู่
 
   const [status, setStatus] = useState("idle"); // "idle" | "loading"
+  const [sortField, setSortField] = useState("tag_created_datetime");
+  const [sortDir, setSortDir] = useState("desc"); // 'asc' | 'desc'
 
   const categories = [
     { _id: "material", name: "วัตถุดิบ" },
@@ -94,6 +96,27 @@ const TagTable = () => {
     return matchName && matchCategory;
   });
 
+  // apply sorting
+  const sortedTags = [...filteredTags];
+  const compareTags = (a, b) => {
+    if (sortField === "tag_created_datetime") {
+      const da = a.tag_created_datetime ? new Date(a.tag_created_datetime).getTime() : 0;
+      const db = b.tag_created_datetime ? new Date(b.tag_created_datetime).getTime() : 0;
+      return da - db;
+    }
+    if (sortField === "tag_name") {
+      return String(a.tag_name || "").localeCompare(String(b.tag_name || ""), "th");
+    }
+    if (sortField === "tag_category_id") {
+      return String(a.tag_category_id || "").localeCompare(String(b.tag_category_id || ""), "th");
+    }
+    if (sortField === "tag_status") {
+      return String(a.tag_status || "").localeCompare(String(b.tag_status || ""));
+    }
+    return 0;
+  };
+  sortedTags.sort((a, b) => (sortDir === "asc" ? compareTags(a, b) : -compareTags(a, b)));
+
   return (
     <div className="space-y-6">
       {/* Card 1: Filters */}
@@ -148,22 +171,38 @@ const TagTable = () => {
           <table className="table table-s w-full table-pin-rows rounded-box bg-base-100 ">
             <thead>
               <tr className="bg-gray-200 text-primary-content rounded-t-lg ">
-                <th className="first:rounded-tl-lg">หมวดหมู่</th>
-                <th>ชื่อแท็ก</th>
-                <th>วันที่สร้าง</th>
-                <th>สถานะ</th>
+                <th className="first:rounded-tl-lg">
+                  <button className="w-full text-left" onClick={() => { if (sortField === 'tag_category_id') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('tag_category_id'); setSortDir('asc'); } }}>
+                    หมวดหมู่ {sortField === 'tag_category_id' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                  </button>
+                </th>
+                <th>
+                  <button className="w-full text-left" onClick={() => { if (sortField === 'tag_name') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('tag_name'); setSortDir('asc'); } }}>
+                    ชื่อแท็ก {sortField === 'tag_name' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                  </button>
+                </th>
+                <th>
+                  <button className="w-full text-left" onClick={() => { if (sortField === 'tag_created_datetime') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('tag_created_datetime'); setSortDir('desc'); } }}>
+                    วันที่สร้าง {sortField === 'tag_created_datetime' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                  </button>
+                </th>
+                <th>
+                  <button className="w-full text-left" onClick={() => { if (sortField === 'tag_status') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('tag_status'); setSortDir('asc'); } }}>
+                    สถานะ {sortField === 'tag_status' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                  </button>
+                </th>
                 <th className="last:rounded-tr-lg">จัดการ</th>
               </tr>
             </thead>
             <tbody>
-              {filteredTags.length === 0 ? (
+              {sortedTags.length === 0 ? (
                 <tr>
                   <td colSpan="7" style={{ textAlign: "center" }}>
                     ไม่พบ Tag
                   </td>
                 </tr>
               ) : (
-                filteredTags.map((t) => (
+                sortedTags.map((t) => (
                   <tr key={t._id}>
                     
                     <td>
@@ -183,15 +222,7 @@ const TagTable = () => {
                       <button
                         onClick={() => handleEdit(t)}
                         className="btn btn-outline btn-sm btn-info"
-                      >
-                        แก้ไข
-                      </button>
-                      <> </>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
+                      <td>{formatThaiDateTime(t.tag_created_datetime)}</td>
           </table>
         </div>
           <div className="mt-2 text-sm text-right">
