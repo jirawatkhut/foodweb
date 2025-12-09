@@ -106,7 +106,7 @@ const Report = () => {
     
     <div className="rounded">
       <h2 className="text-2xl font-bold mb-4">รายงานปัญหา</h2>
-      <h2 className="text-sm mb-4">หากพบปัญหาในการใช้งานระบบ สามารถแจ้งรายงานปัญหาได้ที่หน้านี้ ทีมงานจะดำเนินการแก้ไขโดยเร็วที่สุด ขอบคุณครับ/ค่ะ</h2>
+      <h2 className="text-sm mb-4">หากพบปัญหาในการใช้งานระบบ สามารถแจ้งรายงานปัญหาได้ที่หน้านี้ แอดมินจะดำเนินการแก้ไขโดยเร็วที่สุด ขอบคุณครับ/ค่ะ</h2>
       {status === "loading" && (
         <div className="text-center">
           <span className="loading loading-lg loading-spinner"></span>
