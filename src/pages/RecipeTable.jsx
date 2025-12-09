@@ -26,6 +26,8 @@ const RecipeTable = () => {
   const [tagSearch, setTagSearch] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("latest"); // 'latest' | 'alpha'
+  const [sortField, setSortField] = useState("createdAt"); // 'createdAt' | 'title' | 'tags' | 'created_by'
+  const [sortDir, setSortDir] = useState("desc"); // 'asc' | 'desc'
 
   const [suggestedTags, setSuggestedTags] = useState([]);
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
@@ -215,11 +217,26 @@ const RecipeTable = () => {
 
   // Apply sorting to the filtered list before rendering
   const displayedRecipes = [...filteredRecipes];
-  if (sortBy === "latest") {
-    displayedRecipes.sort((a, b) => new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0));
-  } else if (sortBy === "alpha") {
-    displayedRecipes.sort((a, b) => String(a.title).localeCompare(String(b.title), "th"));
-  }
+  const compare = (a, b) => {
+    if (sortField === "createdAt") {
+      const va = new Date(a.createdAt || a.updatedAt || 0).getTime();
+      const vb = new Date(b.createdAt || b.updatedAt || 0).getTime();
+      return va - vb;
+    }
+    if (sortField === "title") {
+      return String(a.title || "").localeCompare(String(b.title || ""), "th");
+    }
+    if (sortField === "tags") {
+      const va = (a.tags || []).length;
+      const vb = (b.tags || []).length;
+      return va - vb;
+    }
+    if (sortField === "created_by") {
+      return String(a.created_by_username || a.created_by || "").localeCompare(String(b.created_by_username || b.created_by || ""), "th");
+    }
+    return 0;
+  };
+  displayedRecipes.sort((a, b) => (sortDir === "asc" ? compare(a, b) : -compare(a, b)));
   return (
     <div className="space-y-6">
       {/* Card 1: Header, Search, and Add Button */}
@@ -250,7 +267,17 @@ const RecipeTable = () => {
               <select
                 className="select select-sm select-bordered"
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSortBy(v);
+                  if (v === "latest") {
+                    setSortField("createdAt");
+                    setSortDir("desc");
+                  } else if (v === "alpha") {
+                    setSortField("title");
+                    setSortDir("asc");
+                  }
+                }}
               >
                 <option value="latest">ล่าสุด</option>
                 <option value="alpha">ตัวอักษร</option>
@@ -552,13 +579,37 @@ const RecipeTable = () => {
             <table className="table table-s w-full table-pin-rows rounded-box bg-base-100">
               <thead>
                 <tr className="bg-blue-300 text-primary-content rounded-t-lg ">
-                  <th className="first:rounded-tl-lg">ชื่อสูตร</th>
-                  <th>แท็ก</th>
-                  <th>ผู้สร้าง</th>
-                  <th>วันที่สร้าง</th>
-                  <th>สถานะ</th>
-                  <th className="last:rounded-tr-lg">จัดการ</th>
-                </tr>
+                    <th className="first:rounded-tl-lg">
+                      <button className="w-full text-left" onClick={() => {
+                        if (sortField === 'title') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('title'); setSortDir('asc'); }
+                      }}>
+                        ชื่อสูตร {sortField === 'title' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="w-full text-left" onClick={() => {
+                        if (sortField === 'tags') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('tags'); setSortDir('desc'); }
+                      }}>
+                        แท็ก {sortField === 'tags' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="w-full text-left" onClick={() => {
+                        if (sortField === 'created_by') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('created_by'); setSortDir('asc'); }
+                      }}>
+                        ผู้สร้าง {sortField === 'created_by' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="w-full text-left" onClick={() => {
+                        if (sortField === 'createdAt') setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortField('createdAt'); setSortDir('desc'); }
+                      }}>
+                        วันที่สร้าง {sortField === 'createdAt' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                      </button>
+                    </th>
+                    <th>สถานะ</th>
+                    <th className="last:rounded-tr-lg">จัดการ</th>
+                  </tr>
               </thead>
               <tbody>
                 {filteredRecipes.length === 0 ? (
