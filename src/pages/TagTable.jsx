@@ -197,14 +197,13 @@ const TagTable = () => {
             <tbody>
               {sortedTags.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: "center" }}>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
                     ไม่พบ Tag
                   </td>
                 </tr>
               ) : (
                 sortedTags.map((t) => (
                   <tr key={t._id}>
-                    
                     <td>
                       {categories.find((c) => c._id === t.tag_category_id)
                         ?.name || "-"}
@@ -222,11 +221,18 @@ const TagTable = () => {
                       <button
                         onClick={() => handleEdit(t)}
                         className="btn btn-outline btn-sm btn-info"
-                      <td>{formatThaiDateTime(t.tag_created_datetime)}</td>
+                      >แก้ไข</button>
+                      <> </>
+                      <button onClick={() => handleDelete(t._id)} className="btn btn-error btn-sm ml-2">ลบ</button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
         </div>
           <div className="mt-2 text-sm text-right">
-          จำนวนทั้งหมด: {filteredTags.length} รายการ
+          จำนวนทั้งหมด: {sortedTags.length} รายการ
         </div>
         </div>
       </div>
