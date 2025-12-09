@@ -159,13 +159,26 @@ const AdminDashboard = () => {
       const dt = new Date(d);
       let key;
       if (mode === "yearly") {
-        key = `${dt.getFullYear()}`;
+        key = `${dt.getFullYear()}`; // e.g. 2023
       } else {
-        key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+        key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`; // e.g. 2023-01
       }
       map[key] = (map[key] || 0) + 1;
     });
-    let arr = Object.entries(map).map(([k, v]) => ({ period: k, count: v }));
+    let arr = Object.entries(map).map(([k, v]) => {
+      // build a display label in Buddhist year (พ.ศ.)
+      if (k.includes("-")) {
+        // monthly: k = YYYY-MM -> display as MM/BBBB (BBBB = YYYY+543)
+        const [yy, mm] = k.split("-");
+        const buddhistYear = String(Number(yy) + 543);
+        const display = `${mm}/${buddhistYear}`; // e.g. 01/2566
+        return { period: k, display, count: v };
+      } else {
+        // yearly: k = YYYY -> display as BBBB (YYYY+543)
+        const buddhistYear = String(Number(k) + 543);
+        return { period: k, display: buddhistYear, count: v };
+      }
+    });
     arr.sort((a, b) => (a.period > b.period ? 1 : -1));
     if (sortDesc) arr = arr.reverse();
     return arr;
@@ -178,8 +191,11 @@ const AdminDashboard = () => {
   const [sortDescending, setSortDescending] = useState(true); // newest first
 
   // derived for quick summary
-  const lastMonthCount = recipesOverTime.length ? Number(recipesOverTime[recipesOverTime.length - 1].count || 0) : 0;
-  const prevMonthCount = recipesOverTime.length > 1 ? Number(recipesOverTime[recipesOverTime.length - 2].count || 0) : 0;
+  // determine latest and previous indices according to current sort order
+  const latestIndex = recipesOverTime.length ? (sortDescending ? 0 : recipesOverTime.length - 1) : -1;
+  const prevIndex = recipesOverTime.length > 1 ? (sortDescending ? 1 : recipesOverTime.length - 2) : -1;
+  const lastMonthCount = latestIndex >= 0 ? Number(recipesOverTime[latestIndex].count || 0) : 0;
+  const prevMonthCount = prevIndex >= 0 ? Number(recipesOverTime[prevIndex].count || 0) : 0;
   const recipeDelta = lastMonthCount - prevMonthCount;
   const recipeDeltaPct = prevMonthCount ? Math.round((recipeDelta / prevMonthCount) * 100) : null;
   const topTagName = topTags && topTags.length ? topTags[0].name : "-";
@@ -374,7 +390,7 @@ const AdminDashboard = () => {
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart data={recipesOverTime} margin={{ top: 20, right: 20, left: 0, bottom: 50 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e6e6e6" />
-                    <XAxis dataKey="period" interval={0} tick={{ fontSize: 12 }} label={{ value: `เวลา (${periodMode === 'monthly' ? 'เดือน' : 'ปี'})`, position: 'bottom', offset: 12 }} />
+                    <XAxis dataKey="display" interval={0} tick={{ fontSize: 12 }} label={{ value: `เวลา (${periodMode === 'monthly' ? 'เดือน' : 'ปี'}, พ.ศ.)`, position: 'bottom', offset: 12 }} />
                     <YAxis label={{ value: 'จำนวนสูตร', angle: -90, position: 'insideLeft', offset: 8 }} allowDecimals={false} />
                     <Tooltip formatter={(value) => [value, 'จำนวนสูตร']} />
                     <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
