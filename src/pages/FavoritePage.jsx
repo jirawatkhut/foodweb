@@ -76,7 +76,26 @@ const FavoritePage = () => {
   };
 
   // ✅ กรองเฉพาะสูตรที่อยู่ใน favorites
-  const favoriteRecipes = recipes.filter((r) => favorites.includes(r._id));
+  // Build a map of favorite timestamps or indices so we can sort by "most recently favorited"
+  const favTimeMap = new Map();
+  if (Array.isArray(favorites) && favorites.length > 0) {
+    if (typeof favorites[0] === "object") {
+      // favorites may be objects like { recipe_id, addedAt }
+      favorites.forEach((f, idx) => {
+        const id = String(f.recipe_id || f.recipeId || f.id || f._id || "");
+        const ts = f.addedAt || f.timestamp || f.createdAt || f.added_at || f.created_at || f.ts || f.time || null;
+        const time = ts ? new Date(ts).getTime() : idx; // fallback to index
+        if (id) favTimeMap.set(id, time);
+      });
+    } else {
+      // favorites is likely an array of ids (strings). Use array index as fallback ordering (assume later indices = newer)
+      favorites.forEach((id, idx) => favTimeMap.set(String(id), idx));
+    }
+  }
+
+  const favoriteRecipes = recipes
+    .filter((r) => favTimeMap.has(String(r._id)))
+    .sort((a, b) => (favTimeMap.get(String(b._id)) || 0) - (favTimeMap.get(String(a._id)) || 0));
 
   return (
     <div className="min-h-screen bg-base-200 p-8">
