@@ -138,7 +138,8 @@ const AdminDashboard = () => {
       setTopTags(tagsByCount);
       // attach derived charts data to state
       setReportsByCategory(reportsByCategory);
-      setRecipesOverTime(computeRecipesOverTime(recipes));
+      setAllRecipes(recipes);
+      setRecipesOverTime(computeRecipesOverTime(recipes, periodMode, sortDescending));
     } catch (err) {
       console.error("Admin dashboard fetch error:", err.response?.data || err.message || err);
       // don't crash the UI; show partial data
@@ -146,25 +147,35 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
+  // store all recipes so we can re-aggregate when mode changes
+  const [allRecipes, setAllRecipes] = useState([]);
 
-  // helper: compute recipes per month (YYYY-MM)
-  const computeRecipesOverTime = (recipes) => {
+  // helper: compute recipes per period (monthly or yearly)
+  const computeRecipesOverTime = (recipes, mode = "monthly", sortDesc = false) => {
     const map = {};
     (recipes || []).forEach((r) => {
       const d = r.createdAt ? new Date(r.createdAt) : r.createdAt;
       if (!d || isNaN(new Date(d).getTime())) return;
       const dt = new Date(d);
-      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+      let key;
+      if (mode === "yearly") {
+        key = `${dt.getFullYear()}`;
+      } else {
+        key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+      }
       map[key] = (map[key] || 0) + 1;
     });
-    return Object.entries(map)
-      .map(([k, v]) => ({ period: k, count: v }))
-      .sort((a, b) => (a.period > b.period ? 1 : -1));
+    let arr = Object.entries(map).map(([k, v]) => ({ period: k, count: v }));
+    arr.sort((a, b) => (a.period > b.period ? 1 : -1));
+    if (sortDesc) arr = arr.reverse();
+    return arr;
   };
 
   // charts state
   const [reportsByCategory, setReportsByCategory] = useState([]);
   const [recipesOverTime, setRecipesOverTime] = useState([]);
+  const [periodMode, setPeriodMode] = useState("monthly"); // 'monthly' | 'yearly'
+  const [sortDescending, setSortDescending] = useState(true); // newest first
 
   // derived for quick summary
   const lastMonthCount = recipesOverTime.length ? Number(recipesOverTime[recipesOverTime.length - 1].count || 0) : 0;
@@ -178,6 +189,11 @@ const AdminDashboard = () => {
 
   // total reports (for caption percentages)
   const reportsTotal = (reportsByCategory || []).reduce((s, e) => s + (Number(e.count) || 0), 0);
+
+  // recompute recipesOverTime when mode or sort changes or when data refreshed
+  useEffect(() => {
+    setRecipesOverTime(computeRecipesOverTime(allRecipes, periodMode, sortDescending));
+  }, [allRecipes, periodMode, sortDescending]);
 
   if (role !== "1") {
     return (
@@ -338,7 +354,19 @@ const AdminDashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4">จำนวนสูตรที่เพิ่มมาในเเต่ละเดือน</h2>
+            <div className="flex items-start justify-between mb-4">
+              <h2 className="text-xl font-bold">จำนวนสูตรที่เพิ่มมาในเเต่ละ{periodMode === 'monthly' ? 'เดือน' : 'ปี'}</h2>
+              <div className="flex items-center gap-2">
+                <select className="select select-sm" value={periodMode} onChange={(e) => setPeriodMode(e.target.value)}>
+                  <option value="monthly">ตามเดือน</option>
+                  <option value="yearly">ตามปี</option>
+                </select>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" className="accent-blue-500" checked={sortDescending} onChange={(e) => setSortDescending(e.target.checked)} />
+                  ใหม่สุดก่อน
+                </label>
+              </div>
+            </div>
             <div style={{ width: "100%", minHeight: 320 }} className="flex flex-col items-center">
               {loading ? (
                 <div className="text-center"><span className="loading loading-spinner loading-md" /></div>
@@ -346,7 +374,7 @@ const AdminDashboard = () => {
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart data={recipesOverTime} margin={{ top: 20, right: 20, left: 0, bottom: 50 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e6e6e6" />
-                    <XAxis dataKey="period" interval={0} tick={{ fontSize: 12 }} label={{ value: 'เวลา (เดือน)', position: 'bottom', offset: 12 }} />
+                    <XAxis dataKey="period" interval={0} tick={{ fontSize: 12 }} label={{ value: `เวลา (${periodMode === 'monthly' ? 'เดือน' : 'ปี'})`, position: 'bottom', offset: 12 }} />
                     <YAxis label={{ value: 'จำนวนสูตร', angle: -90, position: 'insideLeft', offset: 8 }} allowDecimals={false} />
                     <Tooltip formatter={(value) => [value, 'จำนวนสูตร']} />
                     <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
@@ -380,7 +408,7 @@ const AdminDashboard = () => {
                   <div className="text-sm text-gray-500">สูตรทั้งหมด</div>
                   <div className="text-2xl font-bold">{stats.totalRecipes.toLocaleString?.() ?? stats.totalRecipes}</div>
                   <div className={`text-xs ${recipeDelta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {recipeDelta >= 0 ? `+${recipeDelta}` : recipeDelta} {recipeDeltaPct !== null ? `(${recipeDeltaPct}%)` : ''} จากเดือนล่าสุด
+                    {recipeDelta >= 0 ? `+${recipeDelta}` : recipeDelta} {recipeDeltaPct !== null ? `(${recipeDeltaPct}%)` : ''} จาก{periodMode === 'monthly' ? 'เดือน' : 'ปี'}ล่าสุด
                   </div>
                 </div>
               </div>
