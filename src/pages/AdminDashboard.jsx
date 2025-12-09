@@ -372,11 +372,17 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-start justify-between mb-4">
               <h2 className="text-xl font-bold">จำนวนสูตรที่เพิ่มมาในเเต่ละ{periodMode === 'monthly' ? 'เดือน' : 'ปี'}</h2>
-              <div className="flex items-center gap-2">
-                <select className="select select-sm" value={periodMode} onChange={(e) => setPeriodMode(e.target.value)}>
-                  <option value="monthly">ตามเดือน</option>
-                  <option value="yearly">ตามปี</option>
-                </select>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex items-center">
+                    <input type="radio" name="periodMode" value="monthly" className="radio radio-sm" checked={periodMode === 'monthly'} onChange={(e) => setPeriodMode(e.target.value)} />
+                    <span className="ml-2">ตามเดือน</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input type="radio" name="periodMode" value="yearly" className="radio radio-sm" checked={periodMode === 'yearly'} onChange={(e) => setPeriodMode(e.target.value)} />
+                    <span className="ml-2">ตามปี</span>
+                  </label>
+                </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" className="accent-blue-500" checked={sortDescending} onChange={(e) => setSortDescending(e.target.checked)} />
                   ใหม่สุดก่อน

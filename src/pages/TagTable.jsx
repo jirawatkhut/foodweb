@@ -253,14 +253,30 @@ const TagTable = () => {
               onChange={(e) => setForm({ ...form, tag_name: e.target.value })}
             />
             <h3>สถานะของแท็ก :</h3>
-            <select
-              className="select w-full border border-gray-300 rounded px-2 py-1 mb-2"
-              value={form.tag_status}
-              onChange={(e) => setForm({ ...form, tag_status: Number(e.target.value) })}
-            >
-              <option value={"1"}>Active</option>
-              <option value={"0"}>Inactive</option>
-            </select>
+            <div className="flex items-center gap-4 mt-2">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="tag_status"
+                  value="1"
+                  className="radio radio-sm"
+                  checked={form.tag_status === 1 || String(form.tag_status) === "1"}
+                  onChange={() => setForm({ ...form, tag_status: 1 })}
+                />
+                <span className="ml-2">Active</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="tag_status"
+                  value="0"
+                  className="radio radio-sm"
+                  checked={form.tag_status === 0 || String(form.tag_status) === "0"}
+                  onChange={() => setForm({ ...form, tag_status: 0 })}
+                />
+                <span className="ml-2">Inactive</span>
+              </label>
+            </div>
             <h3>หมวดหมู่ของแท็ก :</h3>
             <select
               className="select w-full border border-gray-300 rounded px-2 py-1 mb-2"

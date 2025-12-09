@@ -203,29 +203,59 @@ const UserTable = () => {
               <p><span className="font-bold mt-2">Username:</span> {form.username || "-"}</p>
             </div>
             <div className="mt-4">
-              <label>ตำเเหน่ง :</label>
-              <select
-                className="select w-48 border border-gray-300 rounded px-2 py-1 ml-2"
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                
-              >
-                <option value={"0"}>Member</option>
-                <option value={"1"}>Admin</option>
-              </select>
+              <label className="block">ตำเเหน่ง :</label>
+              <div className="flex items-center gap-4 mt-2">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="0"
+                    className="radio radio-sm"
+                    checked={String(form.role) === "0" || form.role === 0}
+                    onChange={() => setForm({ ...form, role: "0" })}
+                  />
+                  <span className="ml-2">Member</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="1"
+                    className="radio radio-sm"
+                    checked={String(form.role) === "1" || form.role === 1}
+                    onChange={() => setForm({ ...form, role: "1" })}
+                  />
+                  <span className="ml-2">Admin</span>
+                </label>
+              </div>
             </div>
 
             <div className="mt-4">
-              <label>สถานะ :</label>
-              <select
-                className="select w-48 border border-gray-300 rounded px-2 py-1 ml-2"
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-                
-              >
-                <option value={"1"}>Active</option>
-                <option value={"0"}>Inactive</option>
-              </select>
+              <label className="block">สถานะ :</label>
+              <div className="flex items-center gap-4 mt-2">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="1"
+                    className="radio radio-sm"
+                    checked={String(form.status) === "1" || form.status === 1}
+                    onChange={() => setForm({ ...form, status: "1" })}
+                  />
+                  <span className="ml-2">Active</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="0"
+                    className="radio radio-sm"
+                    checked={String(form.status) === "0" || form.status === 0}
+                    onChange={() => setForm({ ...form, status: "0" })}
+                  />
+                  <span className="ml-2">Inactive</span>
+                </label>
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-3">

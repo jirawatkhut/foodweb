@@ -331,14 +331,30 @@ const ReportTable = () => {
 
             {/* สถานะ */}
             <label className="block mt-3 font-bold">สถานะ:</label>
-            <select
-              className="select w-full border border-gray-300 rounded px-2 py-1 mt-1"
-              value={form.report_status}
-              onChange={(e) => setForm({ ...form, report_status: Number(e.target.value) })}
-            >
-              <option value={0}>รอดำเนินการ</option>
-              <option value={1}>แก้แล้ว</option>
-            </select>
+            <div className="flex items-center gap-4 mt-2">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="report_status"
+                  value={0}
+                  className="radio radio-sm"
+                  checked={form.report_status === 0 || String(form.report_status) === "0"}
+                  onChange={() => setForm({ ...form, report_status: 0 })}
+                />
+                <span className="ml-2">รอดำเนินการ</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="report_status"
+                  value={1}
+                  className="radio radio-sm"
+                  checked={form.report_status === 1 || String(form.report_status) === "1"}
+                  onChange={() => setForm({ ...form, report_status: 1 })}
+                />
+                <span className="ml-2">แก้แล้ว</span>
+              </label>
+            </div>
 
             {/* ปุ่ม */}
             <div className="flex justify-end gap-3 pt-5">
