@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../context/api.js";
 import { API } from "../context/api.js";
 import { getSortedTagList } from "../utils/tagUtils";
+import { formatThaiDate } from "../utils/formatDate";
 const FavoritePage = () => {
   const { token, user_id } = useContext(AuthContext);
   const [recipes, setRecipes] = useState([]);
@@ -123,7 +124,10 @@ const FavoritePage = () => {
 
               {/* เนื้อหา */}
               <div className="card-body" onClick={() => navigate(`/recipe/${r._id}`)}>
-                <h2 className="card-title text-lg">{r.title}</h2>
+                <div className="flex items-start justify-between w-full">
+                  <h2 className="card-title text-lg pr-4">{r.title}</h2>
+                  <div className="text-sm text-gray-500 whitespace-nowrap self-start">{formatThaiDate(r.createdAt)}</div>
+                </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
                   <strong>ส่วนผสม:</strong>{" "}
                   {Array.isArray(r.ingredients)
