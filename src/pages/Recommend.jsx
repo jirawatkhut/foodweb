@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../context/api.js";
 import { API } from "../context/api.js";
 import { getSortedTagList } from "../utils/tagUtils";
+import { formatThaiDate } from "../utils/formatDate";
 
 const Recommend = () => {
   const { token, user_id } = useContext(AuthContext);
@@ -231,7 +232,10 @@ const Recommend = () => {
 
 
                     <div className="card-body" onClick={() => navigate(`/recipe/${r._id}`)}>
-                          <h2 className="card-title text-lg">{r.title}</h2>
+                          <div className="flex items-start justify-between w-full">
+                            <h2 className="card-title text-lg pr-4">{r.title}</h2>
+                            <div className="text-sm text-gray-500 whitespace-nowrap self-start">{formatThaiDate(r.createdAt)}</div>
+                          </div>
                           <div className="flex flex-wrap gap-1 mt-2">
                       {getSortedTagList(tags, r.tags).map((tg) => (
                         <button
