@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
 import { API } from "../context/api.js";
+import { formatThaiDateTime } from "../utils/formatDate";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -51,9 +52,10 @@ const Landing = () => {
                 e.stopPropagation(); // ป้องกันไม่ให้ card's onClick ทำงาน
                 navigate(`/user/${item.created_by}/recipes`);
               }}
-              className="btn btn-xs btn-ghost text-blue-500"
+              className="btn btn-xs btn-ghost text-blue-500 flex flex-col items-start"
             >
-              โดย: {item.created_by_username}
+              <span>โดย: {item.created_by_username}</span>
+              <span className="text-[10px] text-gray-500 mt-0.5">{formatThaiDateTime(item.createdAt)}</span>
             </button>
           )}
         </div>
@@ -169,9 +171,10 @@ const Landing = () => {
                           e.stopPropagation();
                           navigate(`/user/${r.created_by}/recipes`);
                         }}
-                        className="btn btn-xs btn-ghost text-blue-500"
+                        className="btn btn-xs btn-ghost text-blue-500 flex flex-col items-start"
                       >
-                        โดย: {r.created_by_username}
+                        <span>โดย: {r.created_by_username}</span>
+                        <span className="text-[10px] text-gray-500 mt-0.5">{formatThaiDateTime(r.createdAt)}</span>
                       </button>
                     )}
                   </div>
