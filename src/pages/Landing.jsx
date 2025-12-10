@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 
 import api from "../context/api.js";
 import { API } from "../context/api.js";
-import { formatThaiDateTime } from "../utils/formatDate";
+import { formatThaiDate } from "../utils/formatDate";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -47,16 +47,18 @@ const Landing = () => {
         <div className="flex items-center justify-between">
           <div className="font-medium text-sm">{item.title}</div>
           {item.created_by_username && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // ป้องกันไม่ให้ card's onClick ทำงาน
-                navigate(`/user/${item.created_by}/recipes`);
-              }}
-              className="btn btn-xs btn-ghost text-blue-500 flex flex-col items-start"
-            >
-              <span>โดย: {item.created_by_username}</span>
-              <span className="text-[10px] text-gray-500 mt-0.5">{formatThaiDateTime(item.createdAt)}</span>
-            </button>
+            <div className="flex flex-col items-end">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // ป้องกันไม่ให้ card's onClick ทำงาน
+                  navigate(`/user/${item.created_by}/recipes`);
+                }}
+                className="btn btn-xs btn-ghost text-blue-500"
+              >
+                โดย: {item.created_by_username}
+              </button>
+              <span className="text-[10px] text-gray-500 mt-1">{formatThaiDate(item.createdAt)}</span>
+            </div>
           )}
         </div>
         <div className="flex flex-wrap gap-1 mt-2">
@@ -166,16 +168,18 @@ const Landing = () => {
                   <div className="flex items-center justify-between">
                     <div className="text-sm">{r.title}</div>
                     {r.created_by_username && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/user/${r.created_by}/recipes`);
-                        }}
-                        className="btn btn-xs btn-ghost text-blue-500 flex flex-col items-start"
-                      >
-                        <span>โดย: {r.created_by_username}</span>
-                        <span className="text-[10px] text-gray-500 mt-0.5">{formatThaiDateTime(r.createdAt)}</span>
-                      </button>
+                      <div className="flex flex-col items-end">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/user/${r.created_by}/recipes`);
+                          }}
+                          className="btn btn-xs btn-ghost text-blue-500"
+                        >
+                          โดย: {r.created_by_username}
+                        </button>
+                        <span className="text-[10px] text-gray-500 mt-1">{formatThaiDate(r.createdAt)}</span>
+                      </div>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
