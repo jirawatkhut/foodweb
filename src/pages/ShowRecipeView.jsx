@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import api from "../context/api.js";
 import { API } from "../context/api.js";
 import { getSortedTagList } from "../utils/tagUtils";
+import { formatThaiDate } from "../utils/formatDate";
 const ShowRecipeView = () => {
   const { token, user_id } = useContext(AuthContext);
   const [recipes, setRecipes] = useState([]);
@@ -236,7 +237,10 @@ const ShowRecipeView = () => {
 
               {/* เนื้อหา */}
               <div className="card-body" onClick={() => navigate(`/recipe/${r._id}`)}>
-                <h2 className="card-title text-lg">{r.title}</h2>
+                <div className="flex items-start justify-between w-full">
+                  <h2 className="card-title text-lg pr-4">{r.title}</h2>
+                  <div className="text-sm text-gray-500 whitespace-nowrap self-start">{formatThaiDate(r.createdAt)}</div>
+                </div>
                 {/* ผู้สร้าง (clickable) */}
                 <div className="text-sm text-gray-500">
                   {r.created_by_username ? (
