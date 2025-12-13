@@ -243,7 +243,7 @@ const ProfilePage = () => {
         {/* ✅ Tag section */}
         <div className="border-t pt-5">
           <h3 className="text-lg font-semibold mb-2">
-            Tag ที่คุณสนใจ
+            แท็กที่คุณสนใจ
             <button
               onClick={() => setShowTagEdit(!showTagEdit)}
               className="ml-3 text-sm text-indigo-600 hover:underline"

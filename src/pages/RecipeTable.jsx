@@ -631,9 +631,9 @@ const RecipeTable = () => {
                 )}
               </tbody>
             </table>
-            <div className="mt-2 text-sm text-right">
+          </div>
+          <div className="mt-2 text-sm text-right">
               จำนวนทั้งหมด: {filteredRecipes.length} รายการ
-            </div>
           </div>
         </div>
       </div>
