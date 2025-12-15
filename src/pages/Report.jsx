@@ -178,7 +178,13 @@ const Report = () => {
                 <td className="font-medium">{r.report_name}</td>
                 <td>{r.created_by_username || r.created_by}</td>
                 <td>{formatThaiDateTime(r.report_createdAt)}</td>
-                <td>{r.report_status === 1 ? "แก้แล้ว" : "รอดำเนินการ"}</td> 
+                <td>
+                        {r.report_status === 1 ? (
+                          <span className="badge badge-success text-white text-xs">แก้แล้ว</span>
+                        ) : (
+                          <span className="badge badge-ghost text-xs">รอดำเนินการ</span>
+                        )}
+                      </td> 
               </tr>
             ))
           )}
