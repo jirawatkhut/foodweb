@@ -127,7 +127,7 @@ const Landing = () => {
 
   return (
     <div className="p-6 max-w-screen-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-center">An Integrated Tagging System for a Food Community Test 1</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">An Integrated Tagging System for a Food Community</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left: Hot recipes */}
